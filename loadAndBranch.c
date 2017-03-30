@@ -2,7 +2,6 @@
 #include <limits.h>
 #include <ctype.h>
 
-#define _EXT
 #include <stdlib.h>
 
 
@@ -82,6 +81,19 @@ typedef struct Option {
 	const char* specifiedValue;
 } Option_T;
 
+typedef enum {
+	AMODE24=1,
+	AMODE31=2,
+	AMODE64=3
+} AddressingMode_T;
+
+typedef struct {
+	unsigned long long fp;
+	unsigned int programSize;
+	int APFAuthorized:1;
+	AddressingMode_T amode;
+} LoadInfo_T;
+
 static const char* ProgramFailureMessage[] = {
 	"",
 	"At least %s argument must be specified.\n", 
@@ -98,7 +110,7 @@ static const char* ProgramFailureMessage[] = {
 	"No dataset name specified for DDName %s.\n",
 	"Dataset name %s is more than " MAX_DATASET_LEN_STR " characters long.\n", 
 	"Invalid dataset name %s specified.\n", 
-	"Unable to fetch program %s.\n"
+	"Unable to load program %s.\n"
 };
 
 
@@ -261,7 +273,7 @@ static ProgramFailure_T validDatasetName(const char* name, OptInfo_T* optInfo) {
 			return MVSNameTooLong;			
 		}
 		memcpy(member, &name[openParen+1], len-openParen-2);
-		member[len-openParen-1] = '\0';
+		member[len-openParen-2] = '\0';
 		rc = validMemberName(member);
 		if (rc != NoError) {
 			allocSubstitutionStr(optInfo, member, len-openParen-1);
@@ -420,12 +432,51 @@ static const char* printStrPointer(const char* p) {
 	}
 }
 
+static const char* prtAMode(AddressingMode_T amode) {
+	switch(amode) {
+		case AMODE24: return "AMODE24";
+		case AMODE31: return "AMODE31";
+		case AMODE64: return "AMODE64";
+	}
+	return "<unk>";
+}
+static void setLoadInfo(OptInfo_T* optInfo, LoadInfo_T* loadInfo, unsigned long long fp, unsigned int info) {
+	if ((info >> 24) != 0) {
+		loadInfo->APFAuthorized = 1;
+	}
+	loadInfo->programSize = (info & 0x00FFFFFF);
+	if (fp & 0x1) {
+		loadInfo->amode = AMODE64;
+		loadInfo->fp = ((fp >> 1) << 1);
+	} else if (fp & 0x80000000) {
+		loadInfo->amode = AMODE31;
+		loadInfo->fp = (fp & 0x7FFFFFFF);
+	} else {
+		loadInfo->amode = AMODE24;
+		loadInfo->fp = fp;
+	}
+	
+	if (optInfo->verbose) {
+		if (loadInfo->APFAuthorized) {
+			fprintf(stdout, "Program is APF authorized\n");
+		}
+		if (loadInfo->programSize == 0) {
+			fprintf(stdout, "Program is multi-segment program object or very large. Size unknown\n");
+		} else {
+			fprintf(stdout, "Program size is %d bytes\n", (loadInfo->programSize << 3));
+		}
+		fprintf(stdout, "Program loaded at 0x%llX\n", loadInfo->fp);
+		fprintf(stdout, "Addressing mode: %s\n", prtAMode(loadInfo->amode));
+	}
+}
+
 #pragma linkage(LOAD, OS)
 #pragma map(LOAD, "LOAD")
-int LOAD(const char* module, unsigned int* fp);
-static ProgramFailure_T loadProgram(OptInfo_T* optInfo) {
-	unsigned int fp = 0xFFFFFFFF;
-	char program[MAX_NAME_LENGTH+1];
+int LOAD(const char* module, unsigned int* info, unsigned long long* fp);
+static ProgramFailure_T loadProgram(OptInfo_T* optInfo, LoadInfo_T* loadInfo) {
+	unsigned long long fp = 0xFFFFFFFFFFFFFFFFLL;
+	unsigned int info = 0xFFFFFFFF;
+	char program[MAX_NAME_LENGTH+1] = "        ";
 	int i, rc;
 	
 	for (i=0; optInfo->programName[i] != '\0'; ++i) {
@@ -435,16 +486,19 @@ static ProgramFailure_T loadProgram(OptInfo_T* optInfo) {
 			program[i] = optInfo->programName[i];
 		}
 	}
-	program[i] = '\0';
+	program[MAX_NAME_LENGTH] = '\0';
 	if (optInfo->verbose) {
 		fprintf(stdout, "Load program %s\n", program);
 	}
-	rc = LOAD(program, &fp);
+	rc = LOAD(program, &info, &fp);
 	if (rc != 0) {
+		if (optInfo->verbose) {
+			fprintf(stdout, "Program load of %s failed with 0x%x\n", program, rc);
+		}
 		allocSubstitutionStr(optInfo, program, i);
 		return UnableToFetchProgram;
 	} else if (optInfo->verbose) {
-		fprintf(stdout, "Program loaded at 0x%X\n", fp);
+		setLoadInfo(optInfo, loadInfo, fp, info);
 	}
 	return NoError;
 }
@@ -458,6 +512,7 @@ int main(int argc, char* argv[]) {
 		{ NULL, NULL, NULL }
 	};
 	OptInfo_T optInfo = { "IEFBR14", NULL, NULL, NULL, 0, 0 };
+	LoadInfo_T loadInfo = { 0, 0, 0, 0 };
 
 	int i, pf;
 	ProgramFailure_T rc;
@@ -498,10 +553,11 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	
-	rc = loadProgram(&optInfo);
+	rc = loadProgram(&optInfo, &loadInfo);
 	if (rc == NoError) {
 		return 0;
 	} else {
+		syntax(rc, &optInfo);
 		return rc;
 	}
 }
