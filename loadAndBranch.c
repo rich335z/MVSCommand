@@ -9,8 +9,8 @@
 #define MAX_ARGS (INT_MAX)
 #define MAX_NAME_LENGTH (8)
 #define MAX_NAME_LENGTH_STR "8"
-#define MAX_ARGS_LENGTH (256)
-#define MAX_ARGS_LENGTH_STR "256"
+#define MAX_ARGS_LENGTH (100)
+#define MAX_ARGS_LENGTH_STR "100"
 
 #define PROGNAME_ARG (1)
 #define FIRST_PROG_ARG (PROGNAME_ARG+1)
@@ -93,7 +93,8 @@ typedef struct {
 	unsigned int programSize;
 	int APFAuthorized:1;
 	AddressingMode_T amode;
-} LoadInfo_T;
+	int rc;
+} ProgramInfo_T;
 
 static const char* ProgramFailureMessage[] = {
 	"",
@@ -491,33 +492,33 @@ static const char* prtAMode(AddressingMode_T amode) {
 	return "<unk>";
 }
 
-static void setLoadInfo(OptInfo_T* optInfo, LoadInfo_T* loadInfo, unsigned long long fp, unsigned int info) {
+static void setprogInfo(OptInfo_T* optInfo, ProgramInfo_T* progInfo, unsigned long long fp, unsigned int info) {
 	if ((info >> 24) != 0) {
-		loadInfo->APFAuthorized = 1;
+		progInfo->APFAuthorized = 1;
 	}
-	loadInfo->programSize = (info & 0x00FFFFFF);
+	progInfo->programSize = (info & 0x00FFFFFF);
 	if (fp & 0x1) {
-		loadInfo->amode = AMODE64;
-		loadInfo->fp = ((fp >> 1) << 1);
+		progInfo->amode = AMODE64;
+		progInfo->fp = ((fp >> 1) << 1);
 	} else if (fp & 0x80000000) {
-		loadInfo->amode = AMODE31;
-		loadInfo->fp = (fp & 0x7FFFFFFF);
+		progInfo->amode = AMODE31;
+		progInfo->fp = (fp & 0x7FFFFFFF);
 	} else {
-		loadInfo->amode = AMODE24;
-		loadInfo->fp = fp;
+		progInfo->amode = AMODE24;
+		progInfo->fp = fp;
 	}
 	
 	if (optInfo->verbose) {
-		if (loadInfo->APFAuthorized) {
+		if (progInfo->APFAuthorized) {
 			fprintf(stdout, "Program is APF authorized\n");
 		}
-		if (loadInfo->programSize == 0) {
+		if (progInfo->programSize == 0) {
 			fprintf(stdout, "Program is multi-segment program object or very large. Size unknown\n");
 		} else {
-			fprintf(stdout, "Program size is %d bytes\n", (loadInfo->programSize << 3));
+			fprintf(stdout, "Program size is %d bytes\n", (progInfo->programSize << 3));
 		}
-		fprintf(stdout, "Program loaded at 0x%llX\n", loadInfo->fp);
-		fprintf(stdout, "Addressing mode: %s\n", prtAMode(loadInfo->amode));
+		fprintf(stdout, "Program loaded at 0x%llX\n", progInfo->fp);
+		fprintf(stdout, "Addressing mode: %s\n", prtAMode(progInfo->amode));
 	}
 }
 
@@ -525,7 +526,7 @@ static void setLoadInfo(OptInfo_T* optInfo, LoadInfo_T* loadInfo, unsigned long 
 #pragma linkage(LOAD, OS)
 #pragma map(LOAD, "LOAD")
 int LOAD(const char* module, unsigned int* info, unsigned long long* fp);
-static ProgramFailure_T loadProgram(OptInfo_T* optInfo, LoadInfo_T* loadInfo) {
+static ProgramFailure_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 	unsigned long long fp = 0xFFFFFFFFFFFFFFFFLL;
 	unsigned int info = 0xFFFFFFFF;
 	char program[MAX_NAME_LENGTH+1];
@@ -544,24 +545,26 @@ static ProgramFailure_T loadProgram(OptInfo_T* optInfo, LoadInfo_T* loadInfo) {
 		allocSubstitutionStr(optInfo, program, i);
 		return UnableToFetchProgram;
 	} else if (optInfo->verbose) {
-		setLoadInfo(optInfo, loadInfo, fp, info);
+		setprogInfo(optInfo, progInfo, fp, info);
 	}
 	return NoError;
 }
 
 typedef int (OS_FP)();
 #pragma linkage(OS_FP, OS)
-typedef _Packed struct { short length; char arguments[256]; } OSOpts_T;
+typedef _Packed struct { short length; char arguments[MAX_ARGS_LENGTH]; } OSOpts_T;
 
-static ProgramFailure_T callProgram(OptInfo_T* optInfo, LoadInfo_T* loadInfo) {
-	if (loadInfo->amode != AMODE64) {
-		OS_FP* fp = (OS_FP*) (loadInfo->fp);
+static ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
+	if (progInfo->amode != AMODE64) {
+		OS_FP* fp = (OS_FP*) (progInfo->fp);
 		OSOpts_T opts = { strlen(optInfo->arguments) };
+		
 		memcpy(opts.arguments, optInfo->arguments, opts.length);
 		
-		int rc = fp(&opts);
+		progInfo->rc = fp(&opts);
+		
 		if (optInfo->verbose) {
-			fprintf(stdout, "%s run. Return code:%d\n", optInfo->programName, rc);
+			fprintf(stdout, "%s run. Return code:%d\n", optInfo->programName, progInfo->rc);
 		}
 		
 	} else {
@@ -653,7 +656,7 @@ int main(int argc, char* argv[]) {
 		{ NULL, NULL, NULL }
 	};
 	OptInfo_T optInfo = { "IEFBR14", NULL, NULL, NULL, 0, 0 };
-	LoadInfo_T loadInfo = { 0, 0, 0, 0 };
+	ProgramInfo_T progInfo = { 0, 0, 0, 0, 0 };
 	DDNameList_T* ddNameList;
 
 	int i, pf;
@@ -698,15 +701,15 @@ int main(int argc, char* argv[]) {
 		ddNameList = ddNameList->next;
 	}
 	
-	rc = loadProgram(&optInfo, &loadInfo);
+	rc = loadProgram(&optInfo, &progInfo);
 	if (rc != NoError) {
 		syntax(rc, &optInfo);
 		return rc;
 	}
 	
-	rc = callProgram(&optInfo, &loadInfo);
+	rc = callProgram(&optInfo, &progInfo);
 	if (rc == NoError) {
-		return 0;
+		return progInfo.rc;
 	} else {
 		syntax(rc, &optInfo);
 		return rc;
