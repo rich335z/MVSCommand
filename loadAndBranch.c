@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <limits.h>
 #include <ctype.h>
-
+#include <dynit.h>
 #include <stdlib.h>
-
+#include <errno.h>
 
 #define MIN_ARGS (0)
 #define MAX_ARGS (INT_MAX)
@@ -56,7 +56,8 @@ struct DDNameList;
 typedef struct DDNameList {
 	struct DDNameList* next;
 	char* ddName;
-	char* value;
+	char* dsName;
+	char* memName;
 	char backingStorage[1];
 } DDNameList_T;
 
@@ -241,7 +242,8 @@ static ProgramFailure_T validDatasetName(const char* name, OptInfo_T* optInfo) {
 				return InvalidDatasetName;
 			}
 			memcpy(qualifier, qualifierName, i-prevDot-1);
-			qualifier[i-prevDot] = '\0';
+			qualifier[i-prevDot-1] = '\0';
+			
 			rc = validQualifierName(qualifier);
 			if (rc != NoError) {
 				allocSubstitutionStr(optInfo, qualifier, i-prevDot-1);
@@ -287,7 +289,23 @@ static ProgramFailure_T validDatasetName(const char* name, OptInfo_T* optInfo) {
 	}	
 
 	return NoError;
-}			
+}	
+
+static void establishMemNameIfRequired(DDNameList_T* entry) {
+	int i;
+	if (entry && entry->dsName) {
+		for (i=0; entry->dsName[i] != '\0'; ++i) {
+			if (entry->dsName[i] == OPEN_PAREN_CHAR) {
+				entry->memName = &entry->dsName[i+1];          /* establish memname starting after the open-paren                     */
+				entry->dsName[strlen(entry->dsName)-1] = '\0'; /* convert close-paren to a NULL so memname is a proper name           */
+				entry->dsName[i] = '\0';                       /* convert open-paren to a NULL so dsname and memname separate strings */
+				return;
+			}
+		}
+		entry->memName = NULL;
+	}
+	return;
+}
 
 static ProgramFailure_T processHelp(const char* value, Option_T* opt, OptInfo_T* optInfo) {
 	optInfo->help = 1;
@@ -364,7 +382,33 @@ static const char* longOptCmp(const char* optName, const char* argument) {
 	return generalOptCmp(LONG_OPT_PREFIX, LONG_OPT_PREFIX_LEN, optName, argument);
 }
 
-	
+static void uppercaseAndPad(char* output, const char* input, size_t pad) {
+	int i;
+	for (i=0; input[i] != '\0'; ++i) {
+		if (islower(input[i])) {
+			output[i] = toupper(input[i]);
+		} else {
+			output[i] = input[i];
+		}
+	}
+	memset(&output[i], ' ', pad-i);
+	output[pad] = '\0';
+}	
+static void uppercase(char* str) {
+	int i;
+	if (!str) {
+		return;
+	}
+	for (i=0; str[i] != '\0'; ++i) {
+		if (islower(str[i])) {
+			str[i] = toupper(str[i]);
+		} else {
+			str[i] = str[i];
+		}
+	}
+	str[i] = '\0';
+}	
+
 static ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 	int optLen = strlen(option);
 	ProgramFailure_T rc = allocNode(&optInfo->ddNameList, optLen);
@@ -387,10 +431,16 @@ static ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 	entry->ddName = entry->backingStorage;
 	memcpy(entry->ddName, option, optLen+1);
 	entry->ddName[assignPos] = '\0';
-	entry->value  = &entry->ddName[assignPos+1];
+	entry->dsName = &entry->ddName[assignPos+1];
 	
-	rc = validDatasetName(entry->value, optInfo);
-	if (rc != NoError) {
+	rc = validDatasetName(entry->dsName, optInfo);
+
+	if (rc == NoError) {
+		establishMemNameIfRequired(entry);
+		uppercase(entry->ddName);
+		uppercase(entry->dsName);
+		uppercase(entry->memName);
+	} else {
 		if (rc == NoDatasetName) {
 			allocSubstitutionStr(optInfo, entry->ddName, assignPos);
 			optInfo->substitution = entry->ddName;
@@ -424,7 +474,7 @@ static ProgramFailure_T processArg(const char* argument, Option_T* opts, OptInfo
 	return rc;
 }
 
-static const char* printStrPointer(const char* p) {
+static const char* prtStrPointer(const char* p) {
 	if (p == NULL) {
 		return "null";
 	} else {
@@ -440,6 +490,7 @@ static const char* prtAMode(AddressingMode_T amode) {
 	}
 	return "<unk>";
 }
+
 static void setLoadInfo(OptInfo_T* optInfo, LoadInfo_T* loadInfo, unsigned long long fp, unsigned int info) {
 	if ((info >> 24) != 0) {
 		loadInfo->APFAuthorized = 1;
@@ -470,23 +521,18 @@ static void setLoadInfo(OptInfo_T* optInfo, LoadInfo_T* loadInfo, unsigned long 
 	}
 }
 
+
 #pragma linkage(LOAD, OS)
 #pragma map(LOAD, "LOAD")
 int LOAD(const char* module, unsigned int* info, unsigned long long* fp);
 static ProgramFailure_T loadProgram(OptInfo_T* optInfo, LoadInfo_T* loadInfo) {
 	unsigned long long fp = 0xFFFFFFFFFFFFFFFFLL;
 	unsigned int info = 0xFFFFFFFF;
-	char program[MAX_NAME_LENGTH+1] = "        ";
+	char program[MAX_NAME_LENGTH+1];
 	int i, rc;
 	
-	for (i=0; optInfo->programName[i] != '\0'; ++i) {
-		if (islower(optInfo->programName[i])) {
-			program[i] = toupper(optInfo->programName[i]);
-		} else {
-			program[i] = optInfo->programName[i];
-		}
-	}
-	program[MAX_NAME_LENGTH] = '\0';
+	uppercaseAndPad(program, optInfo->programName, MAX_NAME_LENGTH);
+
 	if (optInfo->verbose) {
 		fprintf(stdout, "Load program %s\n", program);
 	}
@@ -502,7 +548,102 @@ static ProgramFailure_T loadProgram(OptInfo_T* optInfo, LoadInfo_T* loadInfo) {
 	}
 	return NoError;
 }
+
+typedef int (OS_FP)();
+#pragma linkage(OS_FP, OS)
+typedef _Packed struct { short length; char arguments[256]; } OSOpts_T;
+
+static ProgramFailure_T callProgram(OptInfo_T* optInfo, LoadInfo_T* loadInfo) {
+	if (loadInfo->amode != AMODE64) {
+		OS_FP* fp = (OS_FP*) (loadInfo->fp);
+		OSOpts_T opts = { strlen(optInfo->arguments) };
+		memcpy(opts.arguments, optInfo->arguments, opts.length);
+		
+		int rc = fp(&opts);
+		if (optInfo->verbose) {
+			fprintf(stdout, "%s run. Return code:%d\n", optInfo->programName, rc);
+		}
+		
+	} else {
+		if (optInfo->verbose) {
+			fprintf(stdout, "Only programs that are not 64-bit are supported. %s not run\n", optInfo->programName);
+		}
+	}
+	return NoError;
+}
+
+
+static int allocPDSMemberReadOnly(OptInfo_T* optInfo, char* ddName, char* dsName, char* memName) {
+   __dyn_t ip;
+   int rc;
+
+   dyninit(&ip);
+
+   ip.__ddname = ddName; 
+   ip.__dsname = dsName; 
+   ip.__member = memName;
+   ip.__dsorg  = __DSORG_PS;
+   ip.__status = __DISP_SHR;   
+
+   errno = 0;
+   rc = dynalloc(&ip); 
+   if (rc) {
+   		if (optInfo->verbose) { 
+   			fprintf(stdout, "Dynalloc failed with errno %d error code %d, info code %d\n", errno, ip.__errcode, ip.__infocode);
+   		}
+	} else {
+   		if (optInfo->verbose) {
+   			fprintf(stdout, "Dynalloc succeeded for %s=%s(%s)\n", ddName, dsName, memName);
+   		}
+   	}
+	return rc;
+}
+
+static int allocPDSReadOnly(OptInfo_T* optInfo, char* ddName, char* dsName) {
+   __dyn_t ip;
+   int rc;
+
+   dyninit(&ip);
+
+   ip.__ddname = ddName; 
+   ip.__dsname = dsName; 
+   ip.__dsorg  = __DSORG_PO;
+   ip.__status = __DISP_SHR;   
+
+
+	errno = 0;
+	rc = dynalloc(&ip); 
+	if (rc) {
+		if (optInfo->verbose) {
+			fprintf(stdout, "Dynalloc failed with errno %d error code %d, info code %d\n", errno, ip.__errcode, ip.__infocode);
+		}
+	} else {
+   		if (optInfo->verbose) {
+   			fprintf(stdout, "Dynalloc succeeded for %s=%s\n", ddName, dsName);
+   		}
+   	}
+	return rc;
+}
 	
+static void printProgramInfo(const char* programName, const char* arguments) {
+	fprintf(stdout, "Program: <%s> Arguments: <%s>\n", prtStrPointer(programName), prtStrPointer(arguments));
+}
+
+static void printDDNames(DDNameList_T* ddNameList) {	
+	fprintf(stdout, "DDNames:\n");
+	if (ddNameList == NULL) {
+		fprintf(stdout, "  No DDNames specified\n");
+	}
+	while (ddNameList != NULL) {
+		if (ddNameList->memName) {
+			fprintf(stdout, "  %s=%s(%s)\n", ddNameList->ddName, ddNameList->dsName, ddNameList->memName);
+		} else {
+			fprintf(stdout, "  %s=%s\n", ddNameList->ddName, ddNameList->dsName);
+		}				
+		ddNameList = ddNameList->next;
+	}
+}
+
 int main(int argc, char* argv[]) {
 	Option_T options[] = {
 		{ &processHelp, "?", "help" }, 
@@ -513,6 +654,7 @@ int main(int argc, char* argv[]) {
 	};
 	OptInfo_T optInfo = { "IEFBR14", NULL, NULL, NULL, 0, 0 };
 	LoadInfo_T loadInfo = { 0, 0, 0, 0 };
+	DDNameList_T* ddNameList;
 
 	int i, pf;
 	ProgramFailure_T rc;
@@ -540,25 +682,35 @@ int main(int argc, char* argv[]) {
 			return 8;
 		}
 	}
+	
+	ddNameList = optInfo.ddNameList;
 	if (optInfo.verbose) {
-		DDNameList_T* ddNameList = optInfo.ddNameList;	
-		fprintf(stdout, "Program: <%s> Arguments: <%s>\n", printStrPointer(optInfo.programName), printStrPointer(optInfo.arguments));
-		fprintf(stdout, "DDNames:\n");
-		if (ddNameList == NULL) {
-			fprintf(stdout, "  No DDNames specified\n");
-		}
-		while (ddNameList != NULL) {
-			fprintf(stdout, "  %s=%s\n", ddNameList->ddName, ddNameList->value);
-			ddNameList = ddNameList->next;
-		}
+		printProgramInfo(optInfo.programName, optInfo.arguments);
+		printDDNames(ddNameList);
+	}
+
+	while (ddNameList != NULL) {
+		if (ddNameList->memName) {
+			allocPDSMemberReadOnly(&optInfo, ddNameList->ddName, ddNameList->dsName, ddNameList->memName);
+		} else {
+			allocPDSReadOnly(&optInfo, ddNameList->ddName, ddNameList->dsName);
+		}				
+		ddNameList = ddNameList->next;
 	}
 	
 	rc = loadProgram(&optInfo, &loadInfo);
+	if (rc != NoError) {
+		syntax(rc, &optInfo);
+		return rc;
+	}
+	
+	rc = callProgram(&optInfo, &loadInfo);
 	if (rc == NoError) {
 		return 0;
 	} else {
 		syntax(rc, &optInfo);
 		return rc;
-	}
+	}	
 }
 	
+
