@@ -4,6 +4,7 @@
 #include <dynit.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <env.h>
 
 #define MIN_ARGS (0)
 #define MAX_ARGS (INT_MAX)
@@ -22,6 +23,8 @@
 
 #define SHORT_OPT_PREFIX "-"
 #define SHORT_OPT_PREFIX_LEN (sizeof(SHORT_OPT_PREFIX)-1)
+
+#define CONSOLE_NAME "*"
 
 #define ASSIGN_CHAR '='
 #define DOT_CHAR '.'
@@ -58,6 +61,7 @@ typedef struct DDNameList {
 	char* ddName;
 	char* dsName;
 	char* memName;
+	int  isConsole:1;
 	char backingStorage[1];
 } DDNameList_T;
 
@@ -434,6 +438,16 @@ static ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 	entry->ddName[assignPos] = '\0';
 	entry->dsName = &entry->ddName[assignPos+1];
 	
+	if (!strcmp(entry->dsName, CONSOLE_NAME)) {
+		uppercase(entry->ddName);
+		entry->isConsole = 1;
+		entry->dsName = NULL;
+		entry->memName = NULL;
+		return NoError;
+	} else {
+		entry->isConsole = 0;
+	}
+	
 	rc = validDatasetName(entry->dsName, optInfo);
 
 	if (rc == NoError) {
@@ -592,7 +606,7 @@ static int allocPDSMemberReadOnly(OptInfo_T* optInfo, char* ddName, char* dsName
    rc = dynalloc(&ip); 
    if (rc) {
    		if (optInfo->verbose) { 
-   			fprintf(stdout, "Dynalloc failed with errno %d error code %d, info code %d\n", errno, ip.__errcode, ip.__infocode);
+   			fprintf(stdout, "PDS Member dynalloc failed with errno %d error code %d, info code %d\n", errno, ip.__errcode, ip.__infocode);
    		}
 	} else {
    		if (optInfo->verbose) {
@@ -618,11 +632,60 @@ static int allocPDSReadOnly(OptInfo_T* optInfo, char* ddName, char* dsName) {
 	rc = dynalloc(&ip); 
 	if (rc) {
 		if (optInfo->verbose) {
-			fprintf(stdout, "Dynalloc failed with errno %d error code %d, info code %d\n", errno, ip.__errcode, ip.__infocode);
+			fprintf(stdout, "PDS dynalloc failed with errno %d error code %d, info code %d\n", errno, ip.__errcode, ip.__infocode);
 		}
 	} else {
    		if (optInfo->verbose) {
    			fprintf(stdout, "Dynalloc succeeded for %s=%s\n", ddName, dsName);
+   		}
+   	}
+	return rc;
+}
+
+static char* temporaryMVSSequentialDataset(char* buffer) {
+	char* result = tmpnam(buffer);
+	int len = strlen(result);
+	if (result == NULL) { return result; }
+	
+	/*
+	 * remove the single quotes that surround the name
+	 */
+	memmove(buffer, &buffer[1], len-2);
+	buffer[len-2] = '\0';
+	
+	return buffer;
+}	
+	
+static int allocConsole(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
+	__dyn_t ip;
+	int rc;
+	char* tmpNamBuffer = malloc(L_tmpnam);
+	if (tmpNamBuffer == NULL) {
+		return -1;
+	}
+	ddNameList->dsName = temporaryMVSSequentialDataset(tmpNamBuffer);
+	if (ddNameList->dsName == NULL) {
+		return -1;
+	}
+	dyninit(&ip);
+
+	ip.__ddname = ddNameList->ddName; 
+	ip.__dsname = ddNameList->dsName;
+	ip.__dsorg  = __DSORG_PS;
+	ip.__normdisp = __DISP_CATLG;
+	ip.__lrecl  = 137;
+	ip.__recfm  = _VB_ + _A_;
+	ip.__status = __DISP_NEW; 
+
+	errno = 0;
+	rc = dynalloc(&ip); 
+	if (rc) {
+		if (optInfo->verbose) {
+			fprintf(stdout, "SYSOUT dynalloc failed for %s=%s (sysout) with errno %d error code %d, info code %d\n", ddNameList->ddName, ddNameList->dsName, errno, ip.__errcode, ip.__infocode);
+		}
+	} else {
+   		if (optInfo->verbose) {
+   			fprintf(stdout, "Dynalloc succeeded for %s=%s (temporary dataset for console)\n", ddNameList->ddName, ddNameList->dsName);
    		}
    	}
 	return rc;
@@ -638,13 +701,46 @@ static void printDDNames(DDNameList_T* ddNameList) {
 		fprintf(stdout, "  No DDNames specified\n");
 	}
 	while (ddNameList != NULL) {
-		if (ddNameList->memName) {
-			fprintf(stdout, "  %s=%s(%s)\n", ddNameList->ddName, ddNameList->dsName, ddNameList->memName);
+		if (ddNameList->isConsole) {
+			fprintf(stdout, "  %s=*\n", ddNameList->ddName);	
 		} else {
-			fprintf(stdout, "  %s=%s\n", ddNameList->ddName, ddNameList->dsName);
-		}				
+			if (ddNameList->memName) {
+				fprintf(stdout, "  %s=%s(%s)\n", ddNameList->ddName, ddNameList->dsName, ddNameList->memName);
+			} else {
+				fprintf(stdout, "  %s=%s\n", ddNameList->ddName, ddNameList->dsName);
+			}				
+		}
 		ddNameList = ddNameList->next;
 	}
+}
+
+/*
+ * Convert a datasetname from HLQ.MLQ.....LLQ to:
+ * //'HLQ.MLQ....LLQ'
+ */
+static char* CIODatasetName(const char* fullyQualifiedDataset, char* buffer) {
+	int len = strlen(fullyQualifiedDataset);
+	memcpy(buffer, "//'", 3);
+	memcpy(&buffer[3], fullyQualifiedDataset, len);
+	memcpy(&buffer[3+len], "'", 2);
+	printf("%s\n", buffer);
+	return buffer;
+}
+
+static int printDatasetToConsole(char* dataset) {
+	char posixName[MAX_DATASET_LEN+5];
+	FILE* fp = fopen(CIODatasetName(dataset, posixName), "rb,type=record");
+	char line[138] = "";
+	size_t numElements = 1;
+	size_t size = 137;
+	int readCount;
+
+	while ((readCount = fread(line, numElements, size, fp)) > 0) {
+		line[readCount] = '\0';
+		printf("%s\n", line);
+	}	
+
+	return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -661,6 +757,8 @@ int main(int argc, char* argv[]) {
 
 	int i, pf;
 	ProgramFailure_T rc;
+	
+	setenv("__POSIX_TMPNAM", "NO", 1);
 	
 	if (argc < MIN_ARGS+1) {
 		if (MIN_ARGS == 1) {
@@ -693,11 +791,15 @@ int main(int argc, char* argv[]) {
 	}
 
 	while (ddNameList != NULL) {
-		if (ddNameList->memName) {
-			allocPDSMemberReadOnly(&optInfo, ddNameList->ddName, ddNameList->dsName, ddNameList->memName);
+		if (ddNameList->isConsole) {
+			allocConsole(&optInfo, ddNameList);
 		} else {
-			allocPDSReadOnly(&optInfo, ddNameList->ddName, ddNameList->dsName);
-		}				
+			if (ddNameList->memName) {
+				allocPDSMemberReadOnly(&optInfo, ddNameList->ddName, ddNameList->dsName, ddNameList->memName);
+			} else {
+				allocPDSReadOnly(&optInfo, ddNameList->ddName, ddNameList->dsName);
+			}				
+		}
 		ddNameList = ddNameList->next;
 	}
 	
@@ -708,6 +810,15 @@ int main(int argc, char* argv[]) {
 	}
 	
 	rc = callProgram(&optInfo, &progInfo);
+	
+	ddNameList = optInfo.ddNameList;
+	while (ddNameList != NULL) {
+		if (ddNameList->isConsole) {
+			printDatasetToConsole(ddNameList->dsName);	
+		}
+		ddNameList = ddNameList->next;
+	}
+	
 	if (rc == NoError) {
 		return progInfo.rc;
 	} else {
@@ -716,4 +827,3 @@ int main(int argc, char* argv[]) {
 	}	
 }
 	
-
