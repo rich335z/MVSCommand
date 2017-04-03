@@ -521,6 +521,7 @@ static void setprogInfo(OptInfo_T* optInfo, ProgramInfo_T* progInfo, unsigned lo
 		progInfo->amode = AMODE24;
 		progInfo->fp = fp;
 	}
+	 
 	
 	if (optInfo->verbose) {
 		if (progInfo->APFAuthorized) {
@@ -552,16 +553,16 @@ static ProgramFailure_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo)
 		fprintf(stdout, "Load program %s\n", program);
 	}
 	rc = LOAD(program, &info, &fp);
-	if (rc != 0) {
+	if (rc == 0) {
+		setprogInfo(optInfo, progInfo, fp, info);	
+	} else {
 		if (optInfo->verbose) {
 			fprintf(stdout, "Program load of %s failed with 0x%x\n", program, rc);
 		}
 		allocSubstitutionStr(optInfo, program, i);
 		return UnableToFetchProgram;
-	} else if (optInfo->verbose) {
-		setprogInfo(optInfo, progInfo, fp, info);
 	}
-	return NoError;
+ 	return NoError;
 }
 
 typedef int (OS_FP)();
@@ -572,10 +573,12 @@ static ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo)
 	if (progInfo->amode != AMODE64) {
 		OS_FP* fp = (OS_FP*) (progInfo->fp);
 		OSOpts_T opts = { strlen(optInfo->arguments) };
-		
+		int rc;
+
 		memcpy(opts.arguments, optInfo->arguments, opts.length);
-		
-		progInfo->rc = fp(&opts);
+
+		rc = fp(&opts);
+		progInfo->rc = rc;
 		
 		if (optInfo->verbose) {
 			fprintf(stdout, "%s run. Return code:%d\n", optInfo->programName, progInfo->rc);
@@ -659,7 +662,7 @@ static char* temporaryMVSSequentialDataset(char* buffer) {
 static int allocConsole(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
 	__dyn_t ip;
 	int rc;
-	char* tmpNamBuffer = malloc(L_tmpnam);
+	char* tmpNamBuffer = malloc(MAX_DATASET_LEN+3);
 	if (tmpNamBuffer == NULL) {
 		return -1;
 	}
@@ -723,7 +726,7 @@ static char* CIODatasetName(const char* fullyQualifiedDataset, char* buffer) {
 	memcpy(buffer, "//'", 3);
 	memcpy(&buffer[3], fullyQualifiedDataset, len);
 	memcpy(&buffer[3+len], "'", 2);
-	printf("%s\n", buffer);
+
 	return buffer;
 }
 
@@ -751,7 +754,7 @@ int main(int argc, char* argv[]) {
 		{ &processVerbose, "v", "verbose"},
 		{ NULL, NULL, NULL }
 	};
-	OptInfo_T optInfo = { "IEFBR14", NULL, NULL, NULL, 0, 0 };
+	OptInfo_T optInfo = { "IEFBR14", "", NULL, NULL, 0, 0 };
 	ProgramInfo_T progInfo = { 0, 0, 0, 0, 0 };
 	DDNameList_T* ddNameList;
 
@@ -803,11 +806,14 @@ int main(int argc, char* argv[]) {
 		ddNameList = ddNameList->next;
 	}
 	
+	
 	rc = loadProgram(&optInfo, &progInfo);
 	if (rc != NoError) {
 		syntax(rc, &optInfo);
 		return rc;
 	}
+	
+	
 	
 	rc = callProgram(&optInfo, &progInfo);
 	
