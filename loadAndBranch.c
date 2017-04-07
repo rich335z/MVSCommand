@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <env.h>
+#include <leawi.h>
 
 #define MIN_ARGS (0)
 #define MAX_ARGS (INT_MAX)
@@ -36,24 +37,7 @@
 #define MAX_QUALIFIER_LEN   (8)
 #define MAX_MEMBER_LEN      (8)
 
-typedef enum {
-	NoError=0,
-	TooFewArgsSingular=1,
-	TooFewArgsPlural=2,
-	TooManyArgs=3,
-	MVSNameTooLong=4,
-	MVSNameInvalid=5,
-	NoMVSName=6,
-	ArgLengthTooLong=7,
-	NoArgSpecified=8,
-	UnrecognizedOption=9,
-	IssueHelp=10,
-	InternalOutOfMemory=11,
-	NoDatasetName=12,
-	DatasetNameTooLong=13,
-	InvalidDatasetName=14,
-	UnableToFetchProgram=15
-} ProgramFailure_T;
+#define OS_LOAD 0
 
 struct DDNameList;
 typedef struct DDNameList {
@@ -77,15 +61,6 @@ typedef struct {
 	int help:1;
 } OptInfo_T;
 
-struct Option;
-typedef struct Option {
-	ProgramFailure_T (*fn)(const char* argument, struct Option* opt, OptInfo_T* optInfo);
-	const char* shortName;
-	const char* longName;
-	const char* defaultValue;
-	const char* specifiedValue;
-} Option_T;
-
 typedef enum {
 	AMODE24=1,
 	AMODE31=2,
@@ -99,6 +74,33 @@ typedef struct {
 	AddressingMode_T amode;
 	int rc;
 } ProgramInfo_T;
+
+/*
+ * The ProgramFailure_T enum and ProgramFailureMessage must be kept in sync.
+ */
+typedef enum {
+	NoError=0,
+	TooFewArgsSingular=1,
+	TooFewArgsPlural=2,
+	TooManyArgs=3,
+	MVSNameTooLong=4,
+	MVSNameInvalid=5,
+	NoMVSName=6,
+	ArgLengthTooLong=7,
+	NoArgSpecified=8,
+	UnrecognizedOption=9,
+	IssueHelp=10,
+	InternalOutOfMemory=11,
+	NoDatasetName=12,
+	DatasetNameTooLong=13,
+	InvalidDatasetName=14,
+	UnableToFetchProgram=15,
+	UnableToEstablishEnvironment=16,
+	DDNameAllocationFailure=17,
+	ErrorPrintingDatasetToConsole=18,
+	ErrorCallingProgram=19,
+	ErrorDeletingTemporaryDataset=20
+} ProgramFailure_T;
 
 static const char* ProgramFailureMessage[] = {
 	"",
@@ -116,10 +118,22 @@ static const char* ProgramFailureMessage[] = {
 	"No dataset name specified for DDName %s.\n",
 	"Dataset name %s is more than " MAX_DATASET_LEN_STR " characters long.\n", 
 	"Invalid dataset name %s specified.\n", 
-	"Unable to load program %s.\n"
+	"Unable to load program %s.\n",
+	"Unable to establish environment.\n",
+	"Unable to allocate all DDNames.\n",
+	"Error printing dataset %s to console.\n",
+	"Error calling program %s.\n",
+	"Error deleting temporary dataset %s.\n"
 };
 
-
+struct Option;
+typedef struct Option {
+	ProgramFailure_T (*fn)(const char* argument, struct Option* opt, OptInfo_T* optInfo);
+	const char* shortName;
+	const char* longName;
+	const char* defaultValue;
+	const char* specifiedValue;
+} Option_T;
 
 static ProgramFailure_T allocNode(DDNameList_T** ddNameList, size_t length) {
 	DDNameList_T* newNode = malloc(DDNAME_LIST_SIZE(length));
@@ -339,7 +353,7 @@ static ProgramFailure_T processVerbose(const char* value, Option_T* opt, OptInfo
 	return NoError;
 }
 
-static ProgramFailure_T processArgs(const char* value, Option_T* opt, OptInfo_T* optInfo) {
+static ProgramFailure_T processArgument(const char* value, Option_T* opt, OptInfo_T* optInfo) {
 	int valLen;
 	if (value[0] != ASSIGN_CHAR) {
 		return NoArgSpecified;
@@ -541,28 +555,56 @@ static void setprogInfo(OptInfo_T* optInfo, ProgramInfo_T* progInfo, unsigned lo
 #pragma linkage(LOAD, OS)
 #pragma map(LOAD, "LOAD")
 int LOAD(const char* module, unsigned int* info, unsigned long long* fp);
+
+#pragma linkage(CEEPLOD2, OS)
+#pragma map(CEEPLOD2, "CEEPLOD2")
+void CEEPLOD2(_INT4* nameLength, char* name, _INT4* flag, _INT4* tokenOut, unsigned long long* fp, _FEEDBACK* fc);
 static ProgramFailure_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 	unsigned long long fp = 0xFFFFFFFFFFFFFFFFLL;
-	unsigned int info = 0xFFFFFFFF;
 	char program[MAX_NAME_LENGTH+1];
-	int i, rc;
-	
-	uppercaseAndPad(program, optInfo->programName, MAX_NAME_LENGTH);
+	int rc;
+	unsigned int info = 0xFFFFFFFF;	
 
+#if OS_LOAD	
+	uppercaseAndPad(program, optInfo->programName, MAX_NAME_LENGTH);
+#else 
+	strcpy(program, optInfo->programName);
+	uppercase(program);
+#endif
 	if (optInfo->verbose) {
 		fprintf(stdout, "Load program %s\n", program);
 	}
-	rc = LOAD(program, &info, &fp);
+#if OS_LOAD
+	{
+		rc = LOAD(program, &info, &fp);
+	}
+#else
+	{
+		_INT4      nameLength = strlen(program);
+		_INT4      flag = 1;
+		_INT4      tokenOut;
+		_FEEDBACK  fc;
+		
+		CEEPLOD2(&nameLength, program, &flag, &tokenOut, &fp, &fc);
+	#ifndef _LP64
+		fp = fp >> 32;
+	#endif		
+		info = 0;
+		rc = fc.tok_sev;			
+	}
+#endif
 	if (rc == 0) {
 		setprogInfo(optInfo, progInfo, fp, info);	
+		return NoError;
 	} else {
 		if (optInfo->verbose) {
 			fprintf(stdout, "Program load of %s failed with 0x%x\n", program, rc);
 		}
-		allocSubstitutionStr(optInfo, program, i);
+		allocSubstitutionStr(optInfo, program, strlen(program));
+		syntax(UnableToFetchProgram, optInfo);
+		
 		return UnableToFetchProgram;
 	}
- 	return NoError;
 }
 
 typedef int (OS_FP)();
@@ -571,7 +613,7 @@ typedef _Packed struct { short length; char arguments[MAX_ARGS_LENGTH]; } OSOpts
 
 static ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 	if (progInfo->amode != AMODE64) {
-		OS_FP* fp = (OS_FP*) (progInfo->fp);
+		OS_FP* fp = (OS_FP*) (progInfo->fp &0x7FFFFFFF);
 		OSOpts_T opts = { strlen(optInfo->arguments) };
 		int rc;
 
@@ -583,13 +625,13 @@ static ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo)
 		if (optInfo->verbose) {
 			fprintf(stdout, "%s run. Return code:%d\n", optInfo->programName, progInfo->rc);
 		}
-		
+		return NoError;		
 	} else {
 		if (optInfo->verbose) {
 			fprintf(stdout, "Only programs that are not 64-bit are supported. %s not run\n", optInfo->programName);
 		}
+		return ErrorCallingProgram;
 	}
-	return NoError;
 }
 
 
@@ -741,88 +783,160 @@ static int printDatasetToConsole(char* dataset) {
 	while ((readCount = fread(line, numElements, size, fp)) > 0) {
 		line[readCount] = '\0';
 		printf("%s\n", line);
-	}	
+	}
+	fclose(fp);
 
 	return 0;
 }
 
-int main(int argc, char* argv[]) {
+static ProgramFailure_T establishEnvironment() {
+	if (setenv("__POSIX_TMPNAM", "NO", 1)) {
+		return UnableToEstablishEnvironment;
+	}
+	return NoError;
+}
+
+static ProgramFailure_T processArgs(int argc, char* argv[], OptInfo_T* optInfo) {
 	Option_T options[] = {
 		{ &processHelp, "?", "help" }, 
 		{ &processPgm, "p", "pgm" }, 
-		{ &processArgs, "a", "args" }, 
+		{ &processArgument, "a", "args" }, 
 		{ &processVerbose, "v", "verbose"},
 		{ NULL, NULL, NULL }
 	};
-	OptInfo_T optInfo = { "IEFBR14", "", NULL, NULL, 0, 0 };
-	ProgramInfo_T progInfo = { 0, 0, 0, 0, 0 };
-	DDNameList_T* ddNameList;
-
-	int i, pf;
 	ProgramFailure_T rc;
-	
-	setenv("__POSIX_TMPNAM", "NO", 1);
+	int i;
 	
 	if (argc < MIN_ARGS+1) {
 		if (MIN_ARGS == 1) {
-			syntax(TooFewArgsSingular, &optInfo);
+			syntax(TooFewArgsSingular, optInfo);
 		} else {
-			syntax(TooFewArgsPlural, &optInfo);
+			syntax(TooFewArgsPlural, optInfo);
 		}
-		return 16;
+		return TooFewArgsPlural;
 	}
 	if (argc > MAX_ARGS) {
-		syntax(TooManyArgs, &optInfo);
-		return 16;
+		syntax(TooManyArgs, optInfo);
+		return TooManyArgs;
 	}	
 	for (i=1; i<argc; ++i) {
-		pf = processArg(argv[i], options, &optInfo);
-		if (pf != NoError) {
-			syntax(pf, &optInfo);
-			return 16;
+		rc = processArg(argv[i], options, optInfo);
+		if (rc != NoError) {
+			syntax(rc, optInfo);
+			return rc;
 		}
-		if (optInfo.help) {
-			syntax(IssueHelp, &optInfo);
-			return 8;
+		if (optInfo->help) {
+			syntax(IssueHelp, optInfo);
+			return IssueHelp;
 		}
 	}
+	return NoError;
+}
+
+static ProgramFailure_T establishDDNames(OptInfo_T* optInfo) {
+	DDNameList_T* ddNameList = optInfo->ddNameList;
+	int rc;
+	int maxRC = 0;
 	
-	ddNameList = optInfo.ddNameList;
-	if (optInfo.verbose) {
-		printProgramInfo(optInfo.programName, optInfo.arguments);
+	if (optInfo->verbose) {
+		printProgramInfo(optInfo->programName, optInfo->arguments);
 		printDDNames(ddNameList);
 	}
 
 	while (ddNameList != NULL) {
 		if (ddNameList->isConsole) {
-			allocConsole(&optInfo, ddNameList);
+			rc = allocConsole(optInfo, ddNameList);
 		} else {
 			if (ddNameList->memName) {
-				allocPDSMemberReadOnly(&optInfo, ddNameList->ddName, ddNameList->dsName, ddNameList->memName);
+				rc = allocPDSMemberReadOnly(optInfo, ddNameList->ddName, ddNameList->dsName, ddNameList->memName);
 			} else {
-				allocPDSReadOnly(&optInfo, ddNameList->ddName, ddNameList->dsName);
+				rc = allocPDSReadOnly(optInfo, ddNameList->ddName, ddNameList->dsName);
 			}				
+		}
+		if (rc > maxRC) {
+			maxRC = rc;
 		}
 		ddNameList = ddNameList->next;
 	}
 	
+	if (maxRC > 0) {
+		return DDNameAllocationFailure;
+	} else {
+		return NoError;
+	}
+}
+
+static ProgramFailure_T printToConsole(OptInfo_T* optInfo) {
+	DDNameList_T* ddNameList = optInfo->ddNameList;
+	while (ddNameList != NULL) {
+		if (ddNameList->isConsole) {
+			if (printDatasetToConsole(ddNameList->dsName)) {
+				optInfo->substitution = ddNameList->dsName;
+				syntax(ErrorPrintingDatasetToConsole, optInfo); 
+				return ErrorPrintingDatasetToConsole;
+			}
+		}
+		ddNameList = ddNameList->next;
+	}
+	return NoError;
+}
+
+static ProgramFailure_T removeConsoleFiles(OptInfo_T* optInfo) {
+	char posixName[MAX_DATASET_LEN+5];
+	DDNameList_T* ddNameList = optInfo->ddNameList;
+	while (ddNameList != NULL) {
+		if (ddNameList->isConsole) {
+			CIODatasetName(ddNameList->dsName, posixName);
+			if (remove(posixName)) {
+				optInfo->substitution = ddNameList->dsName;
+				syntax(ErrorDeletingTemporaryDataset, optInfo); 
+				return ErrorDeletingTemporaryDataset;
+			}
+		}
+		ddNameList = ddNameList->next;
+	}
+	return NoError;
+}
+
+int main(int argc, char* argv[]) {
+	OptInfo_T optInfo = { "IEFBR14", "", NULL, NULL, 0, 0 };
+	ProgramInfo_T progInfo = { 0, 0, 0, 0, 0 };
+
+	ProgramFailure_T rc;
+	
+	rc = establishEnvironment();
+	if (rc != NoError) {
+		syntax(rc, &optInfo);
+		return 16;
+	}
+	
+	rc = processArgs(argc, argv, &optInfo);
+	if (rc != NoError) {
+		return 8;
+	}
+	
+	rc = establishDDNames(&optInfo);
+	if (rc != NoError) {
+		return 8;
+	}
 	
 	rc = loadProgram(&optInfo, &progInfo);
 	if (rc != NoError) {
-		syntax(rc, &optInfo);
 		return rc;
 	}
 	
-	
-	
 	rc = callProgram(&optInfo, &progInfo);
+	if (rc != NoError) {
+		return 16;
+	}	
 	
-	ddNameList = optInfo.ddNameList;
-	while (ddNameList != NULL) {
-		if (ddNameList->isConsole) {
-			printDatasetToConsole(ddNameList->dsName);	
-		}
-		ddNameList = ddNameList->next;
+	rc = printToConsole(&optInfo);
+	if (rc != NoError) {
+		return 8;
+	}
+	rc = removeConsoleFiles(&optInfo);
+	if (rc != NoError) {
+		return 8;
 	}
 	
 	if (rc == NoError) {
@@ -833,3 +947,4 @@ int main(int argc, char* argv[]) {
 	}	
 }
 	
+

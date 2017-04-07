@@ -14,9 +14,25 @@ POSTLOAD DS 0H
          STG 0,0(,7)
          LR  0,15
          LR  1,4
+*         ST  0,0(,0)
 *        
 EPILOG  EDCEPIL
 *
 ERR_SVC DS 0F
         B  POSTLOAD
-        END
+*
+* CEEPLOD2 - load a program with CEE service
+*        
+CEEPLOD2 CSECT
+CEEPLOD2 AMODE 31
+CEEPLOD2 RMODE ANY
+CEEPLODP EDCPRLG
+*
+         L   15,CEECAACELV-CEECAA(,12)
+         L   15,3948(,15)
+         BALR 14,15
+*        
+CEEPLODE EDCEPIL
+*
+        CEECAA
+        END        
