@@ -14,6 +14,8 @@
 #define MAX_ARGS_LENGTH (100)
 #define MAX_ARGS_LENGTH_STR "100"
 
+
+
 #define PROGNAME_ARG (1)
 #define FIRST_PROG_ARG (PROGNAME_ARG+1)
 
@@ -37,7 +39,11 @@
 #define MAX_QUALIFIER_LEN   (8)
 #define MAX_MEMBER_LEN      (8)
 
-#define OS_LOAD 0
+#define SYSTEM_FORMAT_SPECIFIER "PGM=%s,PARM='%s'"
+#define MAX_SYSTEM_CMDLINE_LENGTH (MAX_ARGS_LENGTH + MAX_MEMBER_LEN + sizeof(SYSTEM_FORMAT_SPECIFIER))
+
+#define OS_LOAD 1
+#define SYSTEM_LOAD 1
 
 struct DDNameList;
 typedef struct DDNameList {
@@ -57,6 +63,7 @@ typedef struct {
 	DDNameList_T* ddNameList;
 	char* substitution;
 	
+	int debug:1;
 	int verbose:1;
 	int help:1;
 } OptInfo_T;
@@ -192,7 +199,7 @@ static void syntax(ProgramFailure_T reason, OptInfo_T* optInfo) {
    The first member character must be either a letter or one of the following three special characters: #, @, $.
    The remaining seven characters can be letters, numbers, or one of the following special characters: #, @, or $.
    A PDS member name cannot contain a hyphen (-).
-   A PDS member name cannot contain accented characters (Ã , Ã©, Ã¨, and so on).
+   A PDS member name cannot contain accented characters (à, é, è, and so on).
 */
 static int isMVSLetter(int c) {
 	return (isalpha(c) || (c == '#' || c == '@' || c == '$'));
@@ -324,6 +331,11 @@ static void establishMemNameIfRequired(DDNameList_T* entry) {
 		entry->memName = NULL;
 	}
 	return;
+}
+
+static ProgramFailure_T processDebug(const char* value, Option_T* opt, OptInfo_T* optInfo) {
+	optInfo->debug = 1;
+	return NoError;
 }
 
 static ProgramFailure_T processHelp(const char* value, Option_T* opt, OptInfo_T* optInfo) {
@@ -551,6 +563,24 @@ static void setprogInfo(OptInfo_T* optInfo, ProgramInfo_T* progInfo, unsigned lo
 	}
 }
 
+#if SYSTEM_LOAD
+static ProgramFailure_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
+	return NoError;
+}
+
+static ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
+	char cmdLine[MAX_SYSTEM_CMDLINE_LENGTH+1];
+	sprintf(cmdLine, SYSTEM_FORMAT_SPECIFIER, optInfo->programName, optInfo->arguments);
+	int rc = system(cmdLine);
+	progInfo->rc = rc;
+	
+	if (optInfo->verbose) {
+		fprintf(stdout, "Issued: %s\n", cmdLine);
+		fprintf(stdout, "Return code:%d\n", progInfo->rc);
+	}
+	return NoError;			 
+}
+#else 
 
 #pragma linkage(LOAD, OS)
 #pragma map(LOAD, "LOAD")
@@ -634,6 +664,7 @@ static ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo)
 	}
 }
 
+#endif
 
 static int allocPDSMemberReadOnly(OptInfo_T* optInfo, char* ddName, char* dsName, char* memName) {
    __dyn_t ip;
@@ -793,12 +824,16 @@ static ProgramFailure_T establishEnvironment() {
 	if (setenv("__POSIX_TMPNAM", "NO", 1)) {
 		return UnableToEstablishEnvironment;
 	}
+	if (setenv("__POSIX_SYSTEM", "NO", 1)) {
+		return UnableToEstablishEnvironment;
+	}		
 	return NoError;
 }
 
 static ProgramFailure_T processArgs(int argc, char* argv[], OptInfo_T* optInfo) {
 	Option_T options[] = {
 		{ &processHelp, "?", "help" }, 
+		{ &processDebug, "d", "debug" }, 
 		{ &processPgm, "p", "pgm" }, 
 		{ &processArgument, "a", "args" }, 
 		{ &processVerbose, "v", "verbose"},
@@ -887,10 +922,14 @@ static ProgramFailure_T removeConsoleFiles(OptInfo_T* optInfo) {
 	while (ddNameList != NULL) {
 		if (ddNameList->isConsole) {
 			CIODatasetName(ddNameList->dsName, posixName);
-			if (remove(posixName)) {
-				optInfo->substitution = ddNameList->dsName;
-				syntax(ErrorDeletingTemporaryDataset, optInfo); 
-				return ErrorDeletingTemporaryDataset;
+			if (optInfo->debug) {
+				fprintf(stdout, "Temporary Dataset %s retained for debug\n", ddNameList->dsName);
+			} else {
+				if (remove(posixName)) {
+					optInfo->substitution = ddNameList->dsName;
+					syntax(ErrorDeletingTemporaryDataset, optInfo); 
+					return ErrorDeletingTemporaryDataset;
+				}
 			}
 		}
 		ddNameList = ddNameList->next;
@@ -947,4 +986,3 @@ int main(int argc, char* argv[]) {
 	}	
 }
 	
-
