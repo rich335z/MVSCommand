@@ -34,5 +34,37 @@ CEEPLODP EDCPRLG
 *        
 CEEPLODE EDCEPIL
 *
+SETDUBDF CSECT
+SETDUBDF AMODE 31
+SETDUBDF RMODE ANY
+SETDUBDP EDCPRLG
+         CALL BPX1SDD        
+SETDUBDE EDCEPIL
+*
+ATTMVS   CSECT
+ATTMVS   AMODE 31
+ATTMVS   RMODE ANY
+ATTMVSP  EDCPRLG
+         CALL BPX1ATM        
+ATTMVSE  EDCEPIL
+*
+* (all parms are full words)
+*CALL BPX1SDD,(Dub_setting,
+*              Return_value,
+*              Return_code,
+*              Reason_code)
+*              
+*DUBTHREAD            EQU   0    Dub a thread default setting     @L1A
+*DUBPROCESS           EQU   1    Dub a process default setting    @L1A
+*DUBTASKACEE          EQU   2    Dub a task ACEE setting          @02A
+*DUBPROCESSDEFER      EQU   4    Dub a process - but defer dub    @04A
+*DUBNOSIGNALS         EQU   8    Dub a process - no signals       @DWA
+*DUBJOBPERM           EQU   16   Dub as a permanent Job           @DYA
+*DUBNOJSTUNDUB        EQU   32   Dub process such that jobstep does not
+*                 
+*              
+*Dub_setting is: DUBPROCESSDEFER
+*
         CEECAA
+        BPXYCONS
         END        

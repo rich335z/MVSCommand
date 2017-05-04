@@ -1,0 +1,10 @@
++ mvscmd --concat=UNKA:UNKB:UNKC 
+Error allocating dataset UNKA
+Error allocating dataset UNKB
+Error allocating dataset UNKC
++ mvscmd --concat=UNKA: 
+No dataset name specified for DDName concat.
++ mvscmd --concat=:UNKA 
+No dataset name specified for DDName concat.
++ mvscmd --concat=CEE.SCEERUN:::CEE.SCEERUN 
+No dataset name specified for DDName concat.

@@ -1,0 +1,2 @@
+"//'IBMUSER.TEST.C(ERR)'", line 2.2: CCN5859 (S) #error directive: "This program has an error".
+CCN0793(I) Compilation failed for file //'IBMUSER.TEST.C(ERR)'.  Object file not created.
