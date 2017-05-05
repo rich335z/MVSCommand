@@ -4,20 +4,18 @@ DDNames:
   SYSPRINT=*
   SYSLMOD=IBMUSER.TEST.LOAD(TEST)
   SYSLIN=IBMUSER.TEST.OBJ(TEST)
-Dynalloc succeeded for SYSLIB=CEE.SCEELKED
+Dataset allocation succeeded for SYSLIB=CEE.SCEELKED
 DDName SYSLIB allocated to Dataset CEE.SCEELKED
-Dynalloc succeeded for SYS00001=CEE.SCEELKEX
+Dataset allocation succeeded for SYS00001=CEE.SCEELKEX
 DDName SYS00001 allocated to Dataset CEE.SCEELKEX
-Dynalloc succeeded for SYS00002=CEE.SCEECPP
+Dataset allocation succeeded for SYS00002=CEE.SCEECPP
 DDName SYS00002 allocated to Dataset CEE.SCEECPP
-Dynalloc succeeded for SYSPRINT (temporary dataset for console)
-Dynalloc succeeded for SYSLMOD=IBMUSER.TEST.LOAD(TEST)
-Dynalloc succeeded for SYSLIN=IBMUSER.TEST.OBJ(TEST)
+Dynamic allocation succeeded for SYSPRINT (temporary dataset for console)
+PDS Member allocation succeeded for SYSLMOD=IBMUSER.TEST.LOAD(TEST)
+PDS Member allocation succeeded for SYSLIN=IBMUSER.TEST.OBJ(TEST)
 OS Load program HEWL    
 Addressing mode: AMODE31
 Exit code: 0 from HEWL
-1z/OS V2 R2 BINDER     12:40:02 WEDNESDAY MAY  3, 2017                                                                   
- BATCH EMULATOR  JOB(IBMUSER4) STEP(STEP1   ) PGM= HEWL                                                                  
  IEW2278I B352 INVOCATION PARAMETERS - MAP                                                                               
                                                                                                                          
 1                         *** M O D U L E  M A P ***                                                                     
@@ -164,7 +162,6 @@ Exit code: 0 from HEWL
     PROGRAM TYPE        PROGRAM OBJECT(FORMAT 3)                                                                         
     VOLUME SERIAL       B2SYS1                                                                                           
     DISPOSITION         REPLACED                                                                                         
-    TIME OF SAVE        12.40.02  MAY  3, 2017                                                                           
                                                                                                                          
                                                                                                                          
 1SAVE MODULE ATTRIBUTES:                                                                                                 
@@ -207,8 +204,6 @@ Exit code: 0 from HEWL
                                                                                                                          
                                                                                                                          
                                                                                                                          
-1z/OS V2 R2 BINDER     12:40:02 WEDNESDAY MAY  3, 2017                                                                   
- BATCH EMULATOR  JOB(IBMUSER4) STEP(STEP1   ) PGM= HEWL                                                                  
  IEW2008I 0F03 PROCESSING COMPLETED.  RETURN CODE =  0.                                                                  
                                                                                                                          
                                                                                                                          

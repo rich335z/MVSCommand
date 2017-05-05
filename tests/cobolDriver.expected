@@ -36,25 +36,25 @@ DDNames:
   SYSPRINT=IBMUSER.TEST.COBOL.LIST
   SYSIN=IBMUSER.TEST.COBOL(TEST)
   SYSLIN=IBMUSER.TEST.OBJ(COBOL)
-Dynalloc succeeded for SYSUT15=IBMUSER.TEST.COBOL.SYSUT15
-Dynalloc succeeded for SYSUT14=IBMUSER.TEST.COBOL.SYSUT14
-Dynalloc succeeded for SYSUT13=IBMUSER.TEST.COBOL.SYSUT13
-Dynalloc succeeded for SYSUT12=IBMUSER.TEST.COBOL.SYSUT12
-Dynalloc succeeded for SYSUT11=IBMUSER.TEST.COBOL.SYSUT11
-Dynalloc succeeded for SYSUT10=IBMUSER.TEST.COBOL.SYSUT10
-Dynalloc succeeded for SYSUT9=IBMUSER.TEST.COBOL.SYSUT9
-Dynalloc succeeded for SYSUT8=IBMUSER.TEST.COBOL.SYSUT8
-Dynalloc succeeded for SYSUT7=IBMUSER.TEST.COBOL.SYSUT7
-Dynalloc succeeded for SYSUT6=IBMUSER.TEST.COBOL.SYSUT6
-Dynalloc succeeded for SYSUT5=IBMUSER.TEST.COBOL.SYSUT5
-Dynalloc succeeded for SYSUT4=IBMUSER.TEST.COBOL.SYSUT4
-Dynalloc succeeded for SYSUT3=IBMUSER.TEST.COBOL.SYSUT3
-Dynalloc succeeded for SYSUT2=IBMUSER.TEST.COBOL.SYSUT2
-Dynalloc succeeded for SYSUT1=IBMUSER.TEST.COBOL.SYSUT1
-Dynalloc succeeded for SYSMDECK=IBMUSER.TEST.COBOL.SYSMDECK
-Dynalloc succeeded for SYSPRINT=IBMUSER.TEST.COBOL.LIST
-Dynalloc succeeded for SYSIN=IBMUSER.TEST.COBOL(TEST)
-Dynalloc succeeded for SYSLIN=IBMUSER.TEST.OBJ(COBOL)
+Dataset allocation succeeded for SYSUT15=IBMUSER.TEST.COBOL.SYSUT15
+Dataset allocation succeeded for SYSUT14=IBMUSER.TEST.COBOL.SYSUT14
+Dataset allocation succeeded for SYSUT13=IBMUSER.TEST.COBOL.SYSUT13
+Dataset allocation succeeded for SYSUT12=IBMUSER.TEST.COBOL.SYSUT12
+Dataset allocation succeeded for SYSUT11=IBMUSER.TEST.COBOL.SYSUT11
+Dataset allocation succeeded for SYSUT10=IBMUSER.TEST.COBOL.SYSUT10
+Dataset allocation succeeded for SYSUT9=IBMUSER.TEST.COBOL.SYSUT9
+Dataset allocation succeeded for SYSUT8=IBMUSER.TEST.COBOL.SYSUT8
+Dataset allocation succeeded for SYSUT7=IBMUSER.TEST.COBOL.SYSUT7
+Dataset allocation succeeded for SYSUT6=IBMUSER.TEST.COBOL.SYSUT6
+Dataset allocation succeeded for SYSUT5=IBMUSER.TEST.COBOL.SYSUT5
+Dataset allocation succeeded for SYSUT4=IBMUSER.TEST.COBOL.SYSUT4
+Dataset allocation succeeded for SYSUT3=IBMUSER.TEST.COBOL.SYSUT3
+Dataset allocation succeeded for SYSUT2=IBMUSER.TEST.COBOL.SYSUT2
+Dataset allocation succeeded for SYSUT1=IBMUSER.TEST.COBOL.SYSUT1
+Dataset allocation succeeded for SYSMDECK=IBMUSER.TEST.COBOL.SYSMDECK
+Dataset allocation succeeded for SYSPRINT=IBMUSER.TEST.COBOL.LIST
+PDS Member allocation succeeded for SYSIN=IBMUSER.TEST.COBOL(TEST)
+PDS Member allocation succeeded for SYSLIN=IBMUSER.TEST.OBJ(COBOL)
 OS Load program IGYCRCTL
 Addressing mode: AMODE31
 Exit code: 0 from IGYCRCTL

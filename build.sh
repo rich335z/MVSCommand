@@ -6,4 +6,10 @@
 # Listings aren't required
 # 
 
-c89 -o mvscmd -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./mvscmd.lst\) -Wl,xplink -Wa,list load.s  mvscmd.c  >load.lst
+c89 -c -Wa,list mvsload.s  >mvsload.lst 
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvsutil.c
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvsargs.c
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvsdataset.c
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvssys.c
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvscmd.c
+c89 -o mvscmd -O2 -Wl,xplink mvscmd.o mvsargs.o mvsdataset.o mvssys.o mvsutil.o mvsload.o 

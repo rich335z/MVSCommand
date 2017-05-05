@@ -2,6 +2,9 @@
 Error allocating dataset UNKA
 Error allocating dataset UNKB
 Error allocating dataset UNKC
+Dataset allocation failed for CONCAT=UNKA. Error code 0x1708, info code 2
+Dataset allocation failed for ????????=UNKB. Error code 0x1708, info code 2
+Dataset allocation failed for ????????=UNKC. Error code 0x1708, info code 2
 + mvscmd --concat=UNKA: 
 No dataset name specified for DDName concat.
 + mvscmd --concat=:UNKA 
