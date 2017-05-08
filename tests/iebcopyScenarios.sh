@@ -1,7 +1,8 @@
-tso alloc dsn\("TEST.COPYSOME"\) recfm\(v,b\) lrecl\(137\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\)
-tso alloc dsn\("TEST.COPYALL"\) recfm\(v,b\) lrecl\(137\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\)
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IEBCOPY.COPYSOME'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IEBCOPY.COPYALL'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 
-mvscmd --pgm=iebcopy --sysprint=* --sysin=ibmuser.test.iebcpy\(copymem\) --sysut2=ibmuser.test.copysome --sysut1=ibmuser.test.c | awk '!/IEB1035I/'
-mvscmd --pgm=iebcopy --sysprint=* --sysin=dummy --sysut1=ibmuser.test.c --sysut2=ibmuser.test.copyall | awk '!/IEB1035I/'
-tsocmd delete "TEST.COPYSOME"
-tsocmd delete "TEST.COPYALL"
+mvscmd --pgm=iebcopy --sysprint=* --sysin=${TESTHLQ}.mvscmd.iebcopy.cmd\(copysome\) --sysut2=${TESTHLQ}.mvscmd.iebcopy.copysome --sysut1=${TESTHLQ}.mvscmd.iebcopy.in | awk '!/IEB1035I/'
+mvscmd --pgm=iebcopy --sysprint=* --sysin=dummy --sysut1=${TESTHLQ}.mvscmd.iebcopy.in --sysut2=${TESTHLQ}.mvscmd.iebcopy.copyall | awk '!/IEB1035I/'
+
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.IEBCOPY.COPYSOME'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.IEBCOPY.COPYALL'") >/dev/null 2>&1

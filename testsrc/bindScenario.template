@@ -1,0 +1,231 @@
+Program: <HEWL> Arguments: <MAP>
+DDNames:
+  SYSLIB=CEE.SCEELKED:CEE.SCEELKEX:CEE.SCEECPP
+  SYSPRINT=*
+  SYSLMOD=@@HLQ@@.MVSCMD.BIND.LOAD(BIND)
+  SYSLIN=@@HLQ@@.MVSCMD.BIND.OBJ(BIND)
+Dataset allocation succeeded for SYSLIB=CEE.SCEELKED
+DDName SYSLIB allocated to Dataset CEE.SCEELKED
+Dataset allocation succeeded for SYS00001=CEE.SCEELKEX
+DDName SYS00001 allocated to Dataset CEE.SCEELKEX
+Dataset allocation succeeded for SYS00002=CEE.SCEECPP
+DDName SYS00002 allocated to Dataset CEE.SCEECPP
+Dynamic allocation succeeded for SYSPRINT (temporary dataset for console)
+PDS Member allocation succeeded for SYSLMOD=@@HLQ@@.MVSCMD.BIND.LOAD(BIND)
+PDS Member allocation succeeded for SYSLIN=@@HLQ@@.MVSCMD.BIND.OBJ(BIND)
+OS Load program HEWL    
+Addressing mode: AMODE31
+Exit code: 0 from HEWL
+ IEW2278I B352 INVOCATION PARAMETERS - MAP                                                                               
+                                                                                                                         
+1                         *** M O D U L E  M A P ***                                                                     
+                                                                                                                         
+ ---------------                                                                                                         
+ CLASS  B_TEXT            LENGTH =      9FA  ATTRIBUTES = CAT,   LOAD, RMODE=ANY                                         
+                          OFFSET =        0 IN SEGMENT 001     ALIGN = DBLWORD                                           
+ ---------------                                                                                                         
+                                                                                                                         
+  SECTION    CLASS                                      ------- SOURCE --------                                          
+   OFFSET   OFFSET  NAME                TYPE    LENGTH  DDNAME   SEQ  MEMBER                                             
+                                                                                                                         
+                 0  CEESTART           CSECT        7C  SYSLIN    01  BIND                                               
+                                                                                                                         
+                80  EDCINPL         *  CSECT        24  SYSLIB    01  EDCINPL                                            
+                                                                                                                         
+                A8  CBCSG003        *  CSECT        50  SYSLIB    03  EDC400BA                                           
+                                                                                                                         
+                F8  CEESG003        *  CSECT       12B  SYSLIB    01  CEESG003                                           
+                                                                                                                         
+               228  CEEROOTA        *  CSECT       1F0  SYSLIB    01  CEEROOTA                                           
+        0      228     CEEROOTD           LABEL                                                                          
+                                                                                                                         
+               418  CEEBETBL        *  CSECT        28  SYSLIB    01  CEEBETBL                                           
+                                                                                                                         
+               440  CEEBPUBT        *  CSECT        70  SYSLIB    01  CEEBPUBT                                           
+                                                                                                                         
+               4B0  CEEBTRM         *  CSECT        A4  SYSLIB    01  CEEBTRM                                            
+                                                                                                                         
+               558  CEEBLLST        *  CSECT        5C  SYSLIB    01  CEEBLLST                                           
+       10      568     CEELLIST           LABEL                                                                          
+                                                                                                                         
+               5B8  CEEBINT         *  CSECT         8  SYSLIB    01  CEEBINT                                            
+                                                                                                                         
+               5C0  CEEARLU         *  CSECT        B8  SYSLIB    01  CEEARLU                                            
+                                                                                                                         
+               678  CEEBPIRA        *  CSECT       2A0  SYSLIB    01  CEEINT                                             
+        0      678     CEEINT             LABEL                                                                          
+        0      678     CEEBPIRB           LABEL                                                                          
+        0      678     CEEBPIRC           LABEL                                                                          
+                                                                                                                         
+               918  CEECPYRT        *  CSECT        E2  SYSLIB    01  CEEINT                                             
+                                                                                                                         
+ ---------------                                                                                                         
+ CLASS  C_CODE            LENGTH =      14C  ATTRIBUTES = CAT,   LOAD, RMODE=ANY                                         
+                          OFFSET =      A00 IN SEGMENT 001     ALIGN = DBLWORD                                           
+ ---------------                                                                                                         
+                                                                                                                         
+  SECTION    CLASS                                      ------- SOURCE --------                                          
+   OFFSET   OFFSET  NAME                TYPE    LENGTH  DDNAME   SEQ  MEMBER                                             
+                                                                                                                         
+                 0  $PRIV000010        CSECT       140  SYSLIN    01  BIND                                               
+       88       88     main               LABEL                                                                          
+                                                                                                                         
+               140  CEEMAIN            CSECT         C  SYSLIN    01  BIND                                               
+        0      140     CEEMAIN            LABEL                                                                          
+1                         *** M O D U L E  M A P ***                                                                     
+                                                                                                                         
+ ---------------                                                                                                         
+ CLASS  B_LIT             LENGTH =       C0  ATTRIBUTES = CAT,   LOAD, RMODE=ANY                                         
+                          OFFSET =      B50 IN SEGMENT 001     ALIGN = DBLWORD                                           
+ ---------------                                                                                                         
+                                                                                                                         
+  SECTION    CLASS                                      ------- SOURCE --------                                          
+   OFFSET   OFFSET  NAME                TYPE    LENGTH  DDNAME   SEQ  MEMBER                                             
+                                                                                                                         
+                 0  IEWBLIT            CSECT        C0                **NULL**                                           
+        0        0     IEWBLIT            LABEL                                                                          
+                                                                                                                         
+ ---------------                                                                                                         
+ CLASS  C_@@PPA2          LENGTH =        8  ATTRIBUTES = MRG,   LOAD, RMODE=ANY                                         
+                          OFFSET =      C10 IN SEGMENT 001     ALIGN = DBLWORD                                           
+ ---------------                                                                                                         
+                                                                                                                         
+             CLASS                                                                                                       
+            OFFSET  NAME                TYPE    LENGTH   SECTION                                                         
+                 0  $PRIV000011      PART             8  $PRIV000010                                                     
+1          ***  DATA SET SUMMARY  ***                                                                                    
+                                                                                                                         
+ DDNAME    CONCAT   FILE IDENTIFICATION                                                                                  
+                                                                                                                         
+ SYSLIB      01     CEE.SCEELKED                                                                                         
+ SYSLIB      03     CEE.SCEECPP                                                                                          
+ SYSLIN      01     @@HLQ@@.MVSCMD.BIND.OBJ                                                                                     
+                                                                                                                         
+           *** E N D  O F  M O D U L E  M A P ***                                                                        
+                                                                                                                         
+                                                                                                                         
+                                                                                                                         
+                                 *** O P E R A T I O N   S U M M A R Y   R E P O R T ***                                 
+                                                                                                                         
+1PROCESSING OPTIONS:                                                                                                     
+                                                                                                                         
+    ALIASES             NO                                                                                               
+    ALIGN2              NO                                                                                               
+    AMODE               UNSPECIFIED                                                                                      
+    CALL                YES                                                                                              
+    CASE                UPPER                                                                                            
+    COMPAT              UNSPECIFIED                                                                                      
+    COMPRESS            AUTO                                                                                             
+    DCBS                NO                                                                                               
+    DYNAM               NO                                                                                               
+    EXTATTR             UNSPECIFIED                                                                                      
+    EXITS:              NONE                                                                                             
+    FILL                NONE                                                                                             
+    GID                 UNSPECIFIED                                                                                      
+    HOBSET              NO                                                                                               
+    INFO                NO                                                                                               
+    LET                 04                                                                                               
+    LINECT              060                                                                                              
+    LIST                SUMMARY                                                                                          
+    LISTPRIV            NO                                                                                               
+    LONGPARM            NO                                                                                               
+    MAP                 YES                                                                                              
+    MAXBLK              032760                                                                                           
+    MODMAP              NO                                                                                               
+    MSGLEVEL            00                                                                                               
+    OVLY                NO                                                                                               
+    PRINT               YES                                                                                              
+    RES                 NO                                                                                               
+    REUSABILITY         UNSPECIFIED                                                                                      
+    RMODE               UNSPECIFIED                                                                                      
+    SIGN                NO                                                                                               
+    STORENX             NOREPLACE                                                                                        
+    STRIPCL             NO                                                                                               
+    STRIPSEC            NO                                                                                               
+    SYMTRACE                                                                                                             
+    TERM                NO                                                                                               
+    TRAP                ON                                                                                               
+    UID                 UNSPECIFIED                                                                                      
+    UPCASE              NO                                                                                               
+    WKSPACE             000000K,000000K                                                                                  
+    XCAL                NO                                                                                               
+    XREF                NO                                                                                               
+    ***END OF OPTIONS***                                                                                                 
+                                                                                                                         
+                                                                                                                         
+                                                                                                                         
+                                                                                                                         
+1SAVE OPERATION SUMMARY:                                                                                                 
+                                                                                                                         
+    MEMBER NAME         BIND                                                                                             
+    LOAD LIBRARY        @@HLQ@@.MVSCMD.BIND.LOAD                               
+    PROGRAM TYPE        PROGRAM OBJECT(FORMAT 3)                                                                         
+    VOLUME SERIAL       B2SYS1                                                                                           
+    DISPOSITION         ADDED NEW                                                                                         
+                                                                                                                         
+                                                                                                                         
+1SAVE MODULE ATTRIBUTES:                                                                                                 
+                                                                                                                         
+    AC                  000                                                                                              
+    AMODE                31                                                                                              
+    COMPRESSION         NONE                                                                                             
+    DC                  NO                                                                                               
+    EDITABLE            YES                                                                                              
+    EXCEEDS 16MB        NO                                                                                               
+    EXECUTABLE          YES                                                                                              
+    LONGPARM            NO                                                                                               
+    MIGRATABLE          NO                                                                                               
+    OL                  NO                                                                                               
+    OVLY                NO                                                                                               
+    PACK,PRIME          NO,NO                                                                                            
+    PAGE ALIGN          NO                                                                                               
+    REFR                NO                                                                                               
+    RENT                NO                                                                                               
+    REUS                NO                                                                                               
+    RMODE               ANY                                                                                              
+    SCTR                NO                                                                                               
+    SIGN                NO                                                                                               
+    SSI                                                                                                                  
+    SYM GENERATED       NO                                                                                               
+    TEST                NO                                                                                               
+    XPLINK              NO                                                                                               
+    MODULE SIZE (HEX)   00000C18                                                                                         
+    DASD SIZE (HEX)     00007000                                                                                         
+                                                                                                                         
+                                                                                                                         
+1 ENTRY POINT AND ALIAS SUMMARY:                                                                                         
+                                                                                                                         
+  NAME:            ENTRY TYPE AMODE C_OFFSET CLASS NAME        STATUS                                                    
+                                                                                                                         
+  CEESTART          MAIN_EP      31 00000000 B_TEXT                                                                      
+                                                                                                                         
+                          *** E N D   O F   O P E R A T I O N   S U M M A R Y   R E P O R T ***                          
+                                                                                                                         
+                                                                                                                         
+                                                                                                                         
+                                                                                                                         
+ IEW2008I 0F03 PROCESSING COMPLETED.  RETURN CODE =  0.                                                                  
+                                                                                                                         
+                                                                                                                         
+                                                                                                                         
+1----------------------                                                                                                  
+ MESSAGE SUMMARY REPORT                                                                                                  
+ ----------------------                                                                                                  
+  TERMINAL MESSAGES      (SEVERITY = 16)                                                                                 
+  NONE                                                                                                                   
+                                                                                                                         
+  SEVERE MESSAGES        (SEVERITY = 12)                                                                                 
+  NONE                                                                                                                   
+                                                                                                                         
+  ERROR MESSAGES         (SEVERITY = 08)                                                                                 
+  NONE                                                                                                                   
+                                                                                                                         
+  WARNING MESSAGES       (SEVERITY = 04)                                                                                 
+  NONE                                                                                                                   
+                                                                                                                         
+  INFORMATIONAL MESSAGES (SEVERITY = 00)                                                                                 
+  2008  2278                                                                                                             
+                                                                                                                         
+                                                                                                                         
+  **** END OF MESSAGE SUMMARY REPORT ****                                                                                
+                                                                                                                         

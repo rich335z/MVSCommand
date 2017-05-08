@@ -5,11 +5,12 @@
 # LANGLVL(EXTENDED) is required because of the z-specific extensions that are utilized
 # Listings aren't required
 # 
-
-c89 -c -Wa,list mvsload.s  >mvsload.lst 
-c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvsutil.c
-c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvsargs.c
-c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvsdataset.c
-c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvssys.c
-c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) mvscmd.c
+cd bin
+rm -f mvscmd *.o *.lst
+c89 -c -Wa,list ../src/mvsload.s  >mvsload.lst 
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvsutil.c
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvsargs.c
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvsdataset.c
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvssys.c
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvscmd.c
 c89 -o mvscmd -O2 -Wl,xplink mvscmd.o mvsargs.o mvsdataset.o mvssys.o mvsutil.o mvsload.o 

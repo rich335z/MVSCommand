@@ -1,0 +1,12 @@
+-                     Options Specified
+0  Install:
+0  Command:
+0  Install:
+- Compiler Messages
+0 Message       Line.File Message Description
+0 IBM1085I W      35.0    TOK may be uninitialized when used.
+- File Reference Table
+0   File    Included From  Name
+0      0                   @@HLQ@@.MVSCMD.PLI(MAIN)
+- Component    Return Code    Messages (Total/Suppressed)    Time
+0 End of compilation of PLICALC

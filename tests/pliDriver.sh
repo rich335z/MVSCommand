@@ -1,4 +1,7 @@
-# here is where the PL/I compiler is: https://linuxvm:19443/RDT/edit/edit.html#/ZOS/MVSFiles/10.1.1.2:2016/IEL450.SIBMZPRC/IBMZC
-tso alloc dsn\("TEST.PLI.SYSUT1"\) dsorg\(ps\) catalog tracks space\(100,10\)
-(export STEPLIB=IEL450.SIBMZCMP:CEE.SCEERUN; mvscmd --pgm=ibmzpli --sysprint=* --sysout=* --sysin=ibmuser.test.pli\(main\) --syslin=ibmuser.test.obj\(main\) --sysut1=ibmuser.test.pli.sysut1 | awk '!/15655-W67|0 Compiler/' )
-tsocmd delete "TEST.PLI.SYSUT1"
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.PLI.OBJ'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.PLI.SYSUT1'"\) dsorg\(ps\) catalog tracks space\(100,10\) >/dev/null 2>&1
+
+(export STEPLIB=${PLIHLQ}.SIBMZCMP:${LEHLQ}.SCEERUN; mvscmd --pgm=ibmzpli --sysprint=* --sysout=* --sysin=${TESTHLQ}.mvscmd.pli\(main\) --syslin=${TESTHLQ}.mvscmd.pli.obj\(main\) --sysut1=${TESTHLQ}.mvscmd.pli.sysut1 | awk '!/15655-W67|0 Compiler/' )
+
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.PLI.SYSUT1'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.PLI.OBJ'") >/dev/null 2>&1

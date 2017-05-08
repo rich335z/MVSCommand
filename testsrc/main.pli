@@ -1,0 +1,163 @@
+ plicalc: proc options(main);
+ /*------------------------------------------------------------------*/
+ /*                                                                  */
+ /* A simple calculator that does operations on integers that        */
+ /* are pushed and popped on a stack                                 */
+ /*                                                                  */
+ /*------------------------------------------------------------------*/
+ dcl index  builtin;
+ dcl length builtin;
+ dcl substr builtin;
+ /*                                                                  */
+ dcl 1 stack,
+       2 stkptr fixed bin(15,0) init(0),
+       2 stknum(50) fixed bin(31,0);
+ dcl 1 bufin,
+       2 bufptr fixed bin(15,0) init(0),
+       2 bufchr char (100) varying;
+ dcl 1 tok char (100) varying;
+ dcl 1 tstop char(1) init ('s');
+ dcl 1 ndx fixed bin(15,0);
+ dcl num      fixed bin(31,0);
+ dcl i        fixed bin(31,0);
+
+ /*------------------------------------------------------------------*/
+ /* input  action:                                                   */
+ /*    2      push 2 on stack                                        */
+ /*    18     push 18                                                */
+ /*    +      pop 2, pop 18, add, push result (20)                   */
+ /*    =      output value on the top of the stack (20)              */
+ /*    5      push 5                                                 */
+ /*    /      pop 5, pop 20, divide, push result (4)                 */
+ /*    =      output value on the top of the stack (4)               */
+ /*------------------------------------------------------------------*/
+ bufchr = '2 18 + = 5 / =';
+ do while (tok ^= tstop);
+   tok = readtok(bufin);          /* get next 'token' */
+   select (tok);
+     when (tstop)
+       leave;
+     when ('+') do;
+       num = pop(stack);
+       call push(stack,num);      /*   CALC1   statement */
+     end;
+     when ('-') do;
+       num = pop(stack);
+       call push(stack,pop(stack)-num);
+     end;
+     when ('*')
+       call push(stack,pop(stack)*pop(stack));
+     when ('/') do;
+       num = pop(stack);
+       call push(stack,pop(stack)/num); /*   CALC2   statement */
+     end;
+     when ('=') do;
+       num = pop(stack);
+       put list ('PLICALC: ', num) skip;
+       call push(stack,num);
+     end;
+     otherwise do;/* must be an integer */
+       num = atoi(tok);
+       call push(stack,num);
+     end;
+   end;
+ end;
+ return;
+
+ atoi: procedure(tok) returns (fixed bin(31,0));
+ /*------------------------------------------------------------------*/
+ /*                                                                  */
+ /* convert character string to number                               */
+ /* (note: string validated by readtok)                              */
+ /*                                                                  */
+ /*------------------------------------------------------------------*/
+   dcl 1 tok char (100) varying;
+   dcl 1 num fixed bin (31,0);
+   dcl 1 j fixed bin(15,0);
+   num = 0;
+   do j = 1 to length(tok);
+     num = (10 * num) + (index('0123456789',substr(tok,j,1))-1);
+   end;
+   return (num);
+ end atoi;
+
+ push: procedure(stack,num);
+ /*------------------------------------------------------------------*/
+ /*                                                                  */
+ /* a simple push function for a stack of integers                   */
+ /*                                                                  */
+ /*------------------------------------------------------------------*/
+ dcl 1 stack connected,
+       2 stkptr fixed bin(15,0),
+       2 stknum(50) fixed bin(31,0);
+ dcl num      fixed bin(31,0);
+ stkptr = stkptr + 1;
+ stknum(stkptr) = num; /*   PUSH1   statement */
+ return;
+ end push;
+
+ pop: procedure(stack) returns (fixed bin(31,0));
+ /*------------------------------------------------------------------*/
+ /*                                                                  */
+ /* a simple pop function for a stack of integers                    */
+ /*                                                                  */
+ /*------------------------------------------------------------------*/
+ dcl 1 stack connected,
+       2 stkptr fixed bin(15,0),
+       2 stknum(50) fixed bin(31,0);
+ stkptr = stkptr - 1;
+ return (stknum(stkptr+1));
+ end pop;
+
+ readtok: procedure(bufin) returns (char (100) varying);
+ /*------------------------------------------------------------------*/
+ /*                                                                  */
+ /* a function to read input and tokenize it for a simple calculator */
+ /*                                                                  */
+ /* action: get next input char, update index for next call          */
+ /* return: next input char(s)                                       */
+ /*------------------------------------------------------------------*/
+ dcl length builtin;
+ dcl substr builtin;
+ dcl verify builtin;
+ dcl 1 bufin connected,
+       2 bufptr fixed bin(15,0),
+       2 bufchr char (100) varying;
+ dcl 1 tok char (100) varying;
+ dcl 1 tstop char(1) init ('s');
+ dcl 1 j fixed bin(15,0);
+                                  /* start of processing */
+ if bufptr > length(bufchr) then do;
+   tok = tstop;
+   return ( tok );
+ end;
+ bufptr = bufptr + 1;
+ do while (substr(bufchr,bufptr,1) = ' ');
+   bufptr = bufptr + 1;
+   if bufptr > length(bufchr) then do;
+     tok = tstop;
+     return ( tok );
+   end;
+ end;
+ tok = substr(bufchr,bufptr,1); /* get ready to return single char */
+ select (tok);
+   when ('+','-','/','*','=')
+     bufptr = bufptr;
+   otherwise do;                /* possibly an integer */
+     tok = '';
+     do j = bufptr to length(bufchr);
+       if verify(substr(bufchr,j,1),'0123456789') ^= 0 then
+         leave;
+     end;
+     if j > bufptr then do;
+         j = j - 1;
+       tok = substr(bufchr,bufptr,(j-bufptr+1));
+       bufptr = j;
+     end;
+     else
+       tok = tstop;
+   end;
+ end;
+ return (tok);
+ end readtok;
+ end plicalc;

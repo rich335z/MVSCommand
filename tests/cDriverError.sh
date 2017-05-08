@@ -1,1 +1,1 @@
-(export STEPLIB=CBC.SCCNCMP; mvscmd --pgm="CCNDRVR" --args="/CXX" --syslin=ibmuser.test.obj\(err\) --sysin=ibmuser.test.c\(err\) --sysprint=*)
+(export STEPLIB=${CHLQ}.SCCNCMP; mvscmd --pgm="CCNDRVR" --args="/CXX " --sysin=${TESTHLQ}.mvscmd.c\(err\) --sysprint=dummy)
