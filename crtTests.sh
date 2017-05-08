@@ -2,6 +2,7 @@
 # This will create the test datasets and copy contents in from testsrc
 # used by runTests.sh
 #
+. ./setenv.sh
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.BIND.OBJ'") >/dev/null 2>@1
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.IDCAMS.CMD'") >/dev/null 2>@1
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.IEBCOPY.CMD'") >/dev/null 2>@1
@@ -21,6 +22,19 @@ tso alloc dsn\("'"${TESTHLQ}".MVSCMD.PLI'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.COBOL'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 
 cd testsrc 
+
+# Update the templates and cmd files to have the correct HLQ's
+
+extension="expected"
+tgtdir="../tests"
+for f in *.template; do
+  xx=$(basename ${f}  .template); sed -e "s/@@HLQ@@/${TESTHLQ}/" ${f} >${tgtdir}/${xx}.${extension}
+done
+sed "s/@@HLQ@@/${TESTHLQ}/" delete.template >delete.cmd
+sed "s/@@HLQ@@/${TESTHLQ}/" define.template >define.cmd
+
+# Copy the files from zFS into their respective datasets
+
 cp bind.o "//'"${TESTHLQ}".MVSCMD.BIND.OBJ(BIND)'"
 cp main.pli "//'"${TESTHLQ}".MVSCMD.PLI(MAIN)'"
 cp main.cobol "//'"${TESTHLQ}".MVSCMD.COBOL(MAIN)'"
@@ -36,8 +50,3 @@ cp delete.cmd    "//'"${TESTHLQ}".MVSCMD.IDCAMS.CMD(DELETE)'"
 cp define.cmd    "//'"${TESTHLQ}".MVSCMD.IDCAMS.CMD(DEFINE)'"
 cp copysome.cmd  "//'"${TESTHLQ}".MVSCMD.IEBCOPY.CMD(COPYSOME)'"
 
-extension="expected"
-tgtdir="../tests"
-for f in *.template; do
-  xx=$(basename ${f}  .template); sed -e "s/@@HLQ@@/${TESTHLQ}/" ${f} >${tgtdir}/${xx}.${extension}
-done

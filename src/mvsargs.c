@@ -61,12 +61,28 @@ void syntax(ProgramFailure_T reason, OptInfo_T* optInfo) {
 	} else {
 		fprintf(stderr, ProgramFailureMessage[reason]);
 	}
-	/*
-	fprintf(stderr, "Syntax: %s <program> [<args>]\n", PROG_NAME);
-	fprintf(stderr, " where <program> is the OS-program to run and <args> are the arguments to pass to the program\n");
-	*/
+
 	return;
 }
+
+void printHelp() {
+	fprintf(stdout, "Syntax: %s [<args>]\n", PROG_NAME);
+	fprintf(stdout, " where <args> is one or more of the following:\n");
+	fprintf(stdout, " --help | -? (this help)\n");
+	fprintf(stdout, " --info | -h (this help)\n");
+	fprintf(stdout, " --pgm=<program-name> | -p=<program-name>  (the program to run, e.g. -p=iebcopy). Default is IEFBR14\n");
+	fprintf(stdout, " --args=<program-arguments> | -a=<program-arguments> (arguments to pass to the program, e.g. -a='MARGINS(1,72)'. Default is ''\n");
+	fprintf(stdout, " --verbose | -v (verbose messages). Default is off\n");
+	fprintf(stdout, " --debug | -d (even more verbose messages). Default is off.\n");
+	fprintf(stdout, " --<ddname>=<value> (specify a dataset, concatenated dataset, PDS member, console or dummy for the given ddname).\n");
+	fprintf(stdout, "  Dataset example: --sysin=IBMUSER.TEST.OBJ: allocate the DDName SYSIN to the dataset IBMUSER.TEST.OBJ\n");
+	fprintf(stdout, "  Concatenated dataset example: --syslib=CEE.SCEELKED:CEE.SCEELKEX: allocate the ddname SYSLIB to the dataset concatenation CEE.SCEELKED:CEE.SCEELKEX\n");
+	fprintf(stdout, "  Console example: --sysprint=*: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).\n");
+	fprintf(stdout, "  Dummy Dataset example: --sysin=dummy: allocate the DDName SYSIN to DUMMY\n");
+	fprintf(stdout, " Note: DD-names and the keyword DUMMY are case-insensitive. All other options are case-sensitive\n");
+}	
+	
+	
 
 static ProgramFailure_T processDebug(const char* value, Option_T* opt, OptInfo_T* optInfo) {
 	optInfo->debug = 1;
@@ -174,6 +190,7 @@ static ProgramFailure_T processArg(const char* argument, Option_T* opts, OptInfo
 ProgramFailure_T processArgs(int argc, char* argv[], OptInfo_T* optInfo) {
 	Option_T options[] = {
 		{ &processHelp, "?", "help" }, 
+		{ &processHelp, "h", "info" }, 		
 		{ &processDebug, "d", "debug" }, 
 		{ &processPgm, "p", "pgm" }, 
 		{ &processArgument, "a", "args" }, 

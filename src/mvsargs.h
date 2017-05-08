@@ -9,7 +9,7 @@
 	#define PROGNAME_ARG (1)
 	#define FIRST_PROG_ARG (PROGNAME_ARG+1)
 	
-	#define PROG_NAME "mvsjobs"
+	#define PROG_NAME "mvscmd"
 	#define DEFAULT_MVSCMD "IEFBR14"
 	
 	#define LONG_OPT_PREFIX "--"
@@ -75,5 +75,6 @@
 
 	ProgramFailure_T processArgs(int argc, char* argv[], OptInfo_T* optInfo);
 	void syntax(ProgramFailure_T reason, OptInfo_T* optInfo);
+	void printHelp();
 	ProgramFailure_T allocSubstitutionStr(OptInfo_T* optInfo, const char* value, size_t length);
 #endif

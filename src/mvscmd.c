@@ -37,6 +37,10 @@ int main(int argc, char* argv[]) {
 	}
 	
 	rc = processArgs(argc, argv, &optInfo);
+	if (rc == IssueHelp) {
+		printHelp();
+	}	
+	
 	if (rc != NoError) {
 		return 8;
 	}
