@@ -1,0 +1,27 @@
+ NEW: @@HLQ@@.MVSCMD.SUPERCE.IN(NEWFILE)                      OLD: @@HLQ@@.MVSCMD.SUPERCE.IN(OLDFILE)
+ 
+                      LISTING OUTPUT SECTION (LINE COMPARE)
+ 
+ ID       SOURCE LINES                                                                TYPE  LEN N-LN# O-LN#
+     ----+----1----+----2----+----3----+----4----+----5----+----6----+----7----+----8
+                                                                                      MAT=    1
+ I -   printf("Hello World\n");                                                       RPL=    1 00002 00002
+ D -   printf("Hello World");
+                                                                                      MAT=    1
+ NEW: @@HLQ@@.MVSCMD.SUPERCE.IN(NEWFILE)                      OLD: @@HLQ@@.MVSCMD.SUPERCE.IN(OLDFILE)
+ 
+                        LINE COMPARE SUMMARY AND STATISTICS
+ 
+        2 NUMBER OF LINE MATCHES               1  TOTAL CHANGES (PAIRED+NONPAIRED CHNG)
+        0 REFORMATTED LINES                    1  PAIRED CHANGES (REFM+PAIRED INS/DEL)
+        1 NEW FILE LINE INSERTIONS             0  NON-PAIRED INSERTS
+        1 OLD FILE LINE DELETIONS              0  NON-PAIRED DELETES
+        3 NEW FILE LINES PROCESSED
+        3 OLD FILE LINES PROCESSED
+ 
+ LISTING-TYPE = DELTA      COMPARE-COLUMNS =    1:72        LONGEST-LINE = 80
+ PROCESS OPTIONS USED: NONE
+ 
+ THE FOLLOWING PROCESS STATEMENTS (USING COLUMNS 1:72) WERE PROCESSED:
+    CMPCOLM 1:72
+

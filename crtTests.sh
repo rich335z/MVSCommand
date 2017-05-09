@@ -6,8 +6,10 @@
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.BIND.OBJ'") >/dev/null 2>@1
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.IDCAMS.CMD'") >/dev/null 2>@1
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.IEBCOPY.CMD'") >/dev/null 2>@1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.SUPERCE.CMD'") >/dev/null 2>@1
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.IDCAMS.IN'") >/dev/null 2>@1
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.IEBCOPY.IN'") >/dev/null 2>@1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.SUPERCE.IN'") >/dev/null 2>@1
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.C'") >/dev/null 2>@1
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.PLI'") >/dev/null 2>@1
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL'") >/dev/null 2>@1
@@ -15,8 +17,10 @@
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.BIND.OBJ'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IDCAMS.CMD'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IEBCOPY.CMD'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.SUPERCE.CMD'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IDCAMS.IN'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IEBCOPY.IN'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.SUPERCE.IN'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.C'"\) recfm\(v,b\) lrecl\(255\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.PLI'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.COBOL'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
@@ -28,10 +32,13 @@ cd testsrc
 extension="expected"
 tgtdir="../tests"
 for f in *.template; do
-  xx=$(basename ${f}  .template); sed -e "s/@@HLQ@@/${TESTHLQ}/" ${f} >${tgtdir}/${xx}.${extension}
+  xx=$(basename ${f}  .template); sed -e "s/@@HLQ@@/${TESTHLQ}/g" ${f} >${tgtdir}/${xx}.${extension}
 done
-sed "s/@@HLQ@@/${TESTHLQ}/" delete.template >delete.cmd
-sed "s/@@HLQ@@/${TESTHLQ}/" define.template >define.cmd
+extension="cmd"
+tgtdir="./"
+for f in *.cmdtemplate; do
+  xx=$(basename ${f}  .cmdtemplate); sed -e "s/@@HLQ@@/${TESTHLQ}/g" ${f} >${tgtdir}/${xx}.${extension}
+done
 
 # Copy the files from zFS into their respective datasets
 
@@ -45,8 +52,11 @@ cp iebcopy1.in "//'"${TESTHLQ}".MVSCMD.IEBCOPY.IN(IEBCOPY1)'"
 cp iebcopy2.in "//'"${TESTHLQ}".MVSCMD.IEBCOPY.IN(IEBCOPY2)'"
 cp iebcopy3.in "//'"${TESTHLQ}".MVSCMD.IEBCOPY.IN(IEBCOPY3)'"
 cp idcams.in   "//'"${TESTHLQ}".MVSCMD.IDCAMS.IN(IDCAMS)'"
+cp oldfile.in  "//'"${TESTHLQ}".MVSCMD.SUPERCE.IN(OLDFILE)'"
+cp newfile.in  "//'"${TESTHLQ}".MVSCMD.SUPERCE.IN(NEWFILE)'"
 
 cp delete.cmd    "//'"${TESTHLQ}".MVSCMD.IDCAMS.CMD(DELETE)'"
 cp define.cmd    "//'"${TESTHLQ}".MVSCMD.IDCAMS.CMD(DEFINE)'"
+cp superce.cmd   "//'"${TESTHLQ}".MVSCMD.SUPERCE.CMD(SUPERCE)'"
 cp copysome.cmd  "//'"${TESTHLQ}".MVSCMD.IEBCOPY.CMD(COPYSOME)'"
 

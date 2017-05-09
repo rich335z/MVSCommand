@@ -1,0 +1,1 @@
+mvscmd --pgm=isrsupc --args="DELTAL,LINECMP" --newdd=ibmuser.mvscmd.superce.in\(newfile\) --olddd=ibmuser.mvscmd.superce.in\(oldfile\) --sysin=ibmuser.mvscmd.superce.cmd\(superce\) --outdd=* | awk '!/1  ISRSUPC/'
