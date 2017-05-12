@@ -6,5 +6,5 @@ for test in ${tests}; do
 	echo ${test}
 	name="${test%.*}"
 	${test} >${name}.actual 2>&1
-	diff -b ${name}.actual ${name}.expected
+	diff -w ${name}.actual ${name}.expected
 done

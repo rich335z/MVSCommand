@@ -1,0 +1,1 @@
+mvscmd --pgm=sort --args='MSGPRT=CRITICAL,LIST' --sortin01=${TESTHLQ}.mvscmd.dfsort.master --sortin02=${TESTHLQ}.mvscmd.dfsort.new --sysin=${TESTHLQ}.mvscmd.dfsort.cmd --sortout=${TESTHLQ}.mvscmd.dfsort.merge --sysout=*

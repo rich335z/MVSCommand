@@ -1,0 +1,20 @@
+Program: <ADRDSSU> Arguments: <>
+DDNames:
+  SYSPRINT=*
+  SYSIN=@@HLQ@@.MVSCMD.ADRDSU.CMD
+  ARCHIVE=@@HLQ@@.MVSCMD.ADRDSU.DAR,excl
+Dynamic allocation succeeded for SYSPRINT (temporary dataset for console)
+Dataset allocation succeeded for SYSIN=@@HLQ@@.MVSCMD.ADRDSU.CMD
+Dataset allocation succeeded for ARCHIVE=@@HLQ@@.MVSCMD.ADRDSU.DAR
+OS Load program ADRDSSU 
+Program is APF authorized
+Addressing mode: AMODE31
+Exit code: 0 from ADRDSSU
+- DUMP OUTDD(ARCHIVE) -
+    DS(INCL(@@HLQ@@.MVSCMD.IEBCOPY.**))
+ ADR101I (R/I)-RI01 (01), TASKID 001 HAS BEEN ASSIGNED TO COMMAND 'DUMP '
+ ADR016I (001)-PRIME(01), RACF LOGGING OPTION IN EFFECT FOR THIS TASK
+                          AND 0 FAILED FOR OTHER REASONS
+0ADR454I (001)-DTDSC(01), THE FOLLOWING DATA SETS WERE SUCCESSFULLY PROCESSED
+0                          @@HLQ@@.MVSCMD.IEBCOPY.CMD
+0                          @@HLQ@@.MVSCMD.IEBCOPY.IN

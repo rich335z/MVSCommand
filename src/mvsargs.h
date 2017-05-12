@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2017 IBM.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *    Mike Fulton - initial implentation and documentation
+ *******************************************************************************/
 #ifndef __MVSARGS__
 	#define __MVSARGS__ 1
 	
@@ -61,7 +71,8 @@
 		ErrorDeletingTemporaryDataset=20,
 		ErrorRunning64BitModuleWith31BitDriver=21,
 		ErrorRunning31BitModuleWith64BitDriver=22,
-		ErrorDubbingProgram=23
+		ErrorDubbingProgram=23,
+		InvalidDatasetOption=24
 	} ProgramFailure_T;
 	
 	struct Option;

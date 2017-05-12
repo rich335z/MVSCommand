@@ -35,21 +35,21 @@ tso alloc dsn\("'"${TESTHLQ}".MVSCMD.COBOL.SYSMDECK'"\) dsorg\(ps\) catalog  tra
 --sysut15=${TESTHLQ}.mvscmd.cobol.sysut15\
 )
 
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT1'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT2'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT3'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT4'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT5'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT6'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT7'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT8'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT9'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT10'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT11'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT12'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT13'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT14'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT15'") >/dev/null 2>@1
-(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSMDECK'") >/dev/null 2>@1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT1'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT2'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT3'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT4'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT5'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT6'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT7'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT8'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT9'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT10'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT11'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT12'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT13'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT14'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT15'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSMDECK'") >/dev/null 2>&1
 
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.OBJ'") >/dev/null 2>&1

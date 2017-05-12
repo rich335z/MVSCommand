@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2017 IBM.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *    Mike Fulton - initial implentation and documentation
+ *******************************************************************************/
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -30,11 +40,10 @@ static const char* prtStrPointer(const char* p) {
 
 static ProgramFailure_T allocDDNode(DDNameList_T** ddNameList) {
 	DDNameList_T* newDDNode = malloc(sizeof(DDNameList_T));
-	DSNameList_T* newDSNode = malloc(sizeof(DSNameList_T));
-	if (newDDNode == NULL || newDSNode == NULL) {
+	if (newDDNode == NULL) {
 		return InternalOutOfMemory;
 	}
-	newDDNode->dsName = newDSNode; 
+
 	newDDNode->next = *ddNameList;
 	*ddNameList = newDDNode;
 	
@@ -45,24 +54,24 @@ static void freeDDNode(DDNameList_T* node) {
 	free(node);
 }
 
-static ProgramFailure_T allocDSNode(DSNameList_T* dsNameList) {
-	DSNameNode_T* newNode = malloc(sizeof(DSNameNode_T));
+static ProgramFailure_T allocDSNode(DSNodeList_T* dsNodeList) {
+	DSNode_T* newNode = malloc(sizeof(DSNode_T));
 	if (newNode == NULL) {
 		return InternalOutOfMemory;
 	}
-	if (dsNameList->head == NULL) {
-		dsNameList->head = newNode;
-		dsNameList->tail = newNode;
+	if (dsNodeList->head == NULL) {
+		dsNodeList->head = newNode;
+		dsNodeList->tail = newNode;
 		newNode->next = NULL;
 	} else {
-		dsNameList->tail->next = newNode;
-		dsNameList->tail = newNode;
+		dsNodeList->tail->next = newNode;
+		dsNodeList->tail = newNode;
 	}
 	
 	return NoError;
 }
 
-static void freeDSNode(DSNameNode_T* node) {
+static void freeDSNode(DSNode_T* node) {
 	free(node);
 }
 
@@ -131,7 +140,7 @@ static ProgramFailure_T validDatasetName(const char* buffer, int start, int end,
 	}
 
 	for (i=start; i<=end; ++i) {
-		if (buffer[i] == DOT_CHAR || buffer[i] == OPEN_PAREN_CHAR || buffer[i] == '\0' || buffer[i] == SEPARATOR_CHAR) {
+		if (buffer[i] == DOT_CHAR || buffer[i] == OPEN_PAREN_CHAR || i == end) {
 			const char* qualifierName = &buffer[prevDot+1];
 			if (i-prevDot-1 > MAX_QUALIFIER_LEN) {
 				allocSubstitutionStr(optInfo, qualifierName, i-prevDot-1);
@@ -143,6 +152,9 @@ static ProgramFailure_T validDatasetName(const char* buffer, int start, int end,
 			}
 			memcpy(qualifier, qualifierName, i-prevDot-1);
 			qualifier[i-prevDot-1] = '\0';
+			if (optInfo->debug) {
+				fprintf(stdout, "Check validity of qualifier <%s>\n", qualifier);
+			}
 			
 			rc = validQualifierName(qualifier);
 			if (rc != NoError) {
@@ -176,6 +188,9 @@ static ProgramFailure_T validDatasetName(const char* buffer, int start, int end,
 		}
 		memcpy(member, &buffer[openParen+1], end-openParen-2);
 		member[end-openParen-2] = '\0';
+		if (optInfo->debug) {
+			fprintf(stdout, "Check validity of member name <%s>\n", member);
+		}		
 		rc = validMemberName(member);
 		if (rc != NoError) {
 			allocSubstitutionStr(optInfo, member, end-openParen-1);
@@ -191,7 +206,7 @@ static ProgramFailure_T validDatasetName(const char* buffer, int start, int end,
 	return NoError;
 }	
 
-static void copyDSNameAndMember(DSNameNode_T* entry, const char* buffer, int start, int end) {
+static void copyDSNameAndMember(DSNode_T* entry, const char* buffer, int start, int end) {
 	int dsNameLen;
 	int memStart;
 	if (entry && buffer) {
@@ -248,14 +263,14 @@ ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 	uppercase(entry->ddName);
 	
 	if (!strcmp(&option[assignPos+1], CONSOLE_NAME)) {
-		rc = allocDSNode(entry->dsName);
+		rc = allocDSNode(&entry->dsNodeList);
 		if (rc == NoError) {
 			entry->isConsole = 1;
 		}
 		return rc;
 	}
 	if (!strnocasecmp(&option[assignPos+1], DUMMY_NAME)) {
-		rc = allocDSNode(entry->dsName);
+		rc = allocDSNode(&entry->dsNodeList);
 		if (rc == NoError) {
 			entry->isDummy = 1;
 		}
@@ -264,15 +279,15 @@ ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 
 	dsNameStartPos=assignPos+1;
 	while (1) {
-		if (option[i] == '\0' || option[i] == ':') {
+		if (option[i] == '\0' || option[i] == SEPARATOR_CHAR || option[i] == OPTION_CHAR) {
 			rc = validDatasetName(option, dsNameStartPos, i, optInfo);
 			if (rc == NoError) {
-				rc = allocDSNode(entry->dsName);
+				rc = allocDSNode(&entry->dsNodeList);
 				if (rc != NoError) {
 					return rc;
 				}
-				copyDSNameAndMember(entry->dsName->tail, option, dsNameStartPos, i);
-				if (option[i] == '\0') {
+				copyDSNameAndMember(entry->dsNodeList.tail, option, dsNameStartPos, i);
+				if (option[i] == '\0' || option[i] == OPTION_CHAR) {
 					break;
 				}
 				dsNameStartPos=i+1;
@@ -286,52 +301,73 @@ ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 		}	
 		++i;
 	}
+	if (option[i] == OPTION_CHAR) {
+		const char* subOpt = &option[i+1]; 
+		if (optInfo->debug) {
+			fprintf(stdout, "Check option <%s>\n", subOpt);
+		}		
+
+		if (!strnocasecmp(subOpt, DISP_OLD) || !strnocasecmp(subOpt, DISP_EXCL)) {
+			entry->dsNodeList.tail->isExclusive = 1;
+		} else {
+			allocSubstitutionStr(optInfo, &option[i+1], optLen-i);	
+			rc = InvalidDatasetOption;
+		}
+	}
 	return rc;
 }
 
 
-static int allocPDSMember(OptInfo_T* optInfo, char* ddName, char* dsName, char* memName) {
-   __dyn_t ip;
-   int rc;
+static int allocPDSMember(OptInfo_T* optInfo, char* ddName, DSNode_T* dsNode) {
+	__dyn_t ip;
+	int rc;
 
-   dyninit(&ip);
+	dyninit(&ip);
 
-   ip.__ddname = ddName; 
-   ip.__dsname = dsName; 
-   ip.__member = memName;
-   ip.__dsorg  = __DSORG_PS;
-   ip.__status = __DISP_SHR;   
+	ip.__ddname = ddName; 
+	ip.__dsname = dsNode->dsName; 
+	ip.__member = dsNode->memName;
+	ip.__dsorg  = __DSORG_PS;
+	if (dsNode->isExclusive) {
+		ip.__status = __DISP_OLD;
+	} else {
+		ip.__status = __DISP_SHR; 
+	}   
 
-   errno = 0;
-   rc = dynalloc(&ip); 
-   if (rc) {
-   		fprintf(stdout, "PDS Member allocation failed for %s=%s(%s). Error code 0x%x, info code %d\n", ddName, dsName, memName, ip.__errcode, ip.__infocode);
+	errno = 0;
+	rc = dynalloc(&ip); 
+	if (rc) {
+   		fprintf(stdout, "PDS Member allocation failed for %s=%s(%s). Error code 0x%x, info code %d\n", ddName, dsNode->dsName, dsNode->memName, ip.__errcode, ip.__infocode);
 	} else {
    		if (optInfo->verbose) {
-   			fprintf(stdout, "PDS Member allocation succeeded for %s=%s(%s)\n", ddName, dsName, memName);
+   			fprintf(stdout, "PDS Member allocation succeeded for %s=%s(%s)\n", ddName, dsNode->dsName, dsNode->memName);
    		}
    	}
 	return rc;
 }
 
-static int allocDataset(OptInfo_T* optInfo, char* ddName, char* dsName) {
-   __dyn_t ip;
-   int rc;
+static int allocDataset(OptInfo_T* optInfo, char* ddName, DSNode_T* dsNode) {
+	__dyn_t ip;
+	int rc;
 
-   dyninit(&ip);
+	dyninit(&ip);
 
-   ip.__ddname = ddName; 
-   ip.__dsname = dsName; 
-   ip.__status = __DISP_SHR;   
-
+	ip.__ddname = ddName; 
+	ip.__dsname = dsNode->dsName; 
+	
+	if (dsNode->isExclusive) {
+		ip.__status = __DISP_OLD;
+	} else {
+		ip.__status = __DISP_SHR; 
+	}
 
 	errno = 0;
 	rc = dynalloc(&ip); 
 	if (rc) {
-		fprintf(stdout, "Dataset allocation failed for %s=%s. Error code 0x%x, info code %d\n", ddName, dsName, ip.__errcode, ip.__infocode);
+		fprintf(stdout, "Dataset allocation failed for %s=%s. Error code 0x%x, info code %d\n", ddName, dsNode->dsName, ip.__errcode, ip.__infocode);
 	} else {
    		if (optInfo->verbose) {
-   			fprintf(stdout, "Dataset allocation succeeded for %s=%s\n", ddName, dsName);
+   			fprintf(stdout, "Dataset allocation succeeded for %s=%s\n", ddName, dsNode->dsName);
    		}
    	}
 	return rc;
@@ -357,7 +393,7 @@ static int allocConsole(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
 	__dyn_t ip;
 	int rc;
 
-	DSNameNode_T* node = ddNameList->dsName->head;
+	DSNode_T* node = ddNameList->dsNodeList.head;
 	temporaryMVSSequentialDataset(node->dsName);
 	if (node->dsName == NULL) {
 		return -1;
@@ -419,9 +455,8 @@ static int printDatasetToConsole(char* dataset) {
 	return 0;
 }
 
-
-static int allocConcatenationReadOnly(OptInfo_T* optInfo, const char* ddName, DSNameList_T* dsNameList) {
-	DSNameNode_T* cur = dsNameList->head;
+static int allocConcatenationReadOnly(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
+	DSNode_T* cur = ddNameList->dsNodeList.head;
 	int rc;
 	int maxRC = 0;
 	int numDatasets = 0;
@@ -434,14 +469,14 @@ static int allocConcatenationReadOnly(OptInfo_T* optInfo, const char* ddName, DS
 	
 	while (cur != NULL) {
 		if (numDatasets == 0) { /* use the concatenation ddname for the first allocation */
-			strcpy(cur->tempDDName, ddName);
+			strcpy(cur->tempDDName, ddNameList->ddName);
 		} else {
 			strcpy(cur->tempDDName, "????????"); 
 		}
 		if (hasMemberName(cur)) {
-			rc = allocPDSMember(optInfo, cur->tempDDName, cur->dsName, cur->memName);
+			rc = allocPDSMember(optInfo, cur->tempDDName, cur);
 		} else {
-			rc = allocDataset(optInfo, cur->tempDDName, cur->dsName);
+			rc = allocDataset(optInfo, cur->tempDDName, cur);
 		}
 		if (optInfo->verbose) {
 			fprintf(stdout, "DDName %s allocated to Dataset %s\n", cur->tempDDName, cur->dsName);
@@ -472,7 +507,7 @@ static int allocConcatenationReadOnly(OptInfo_T* optInfo, const char* ddName, DS
 	svc99Parms->key = 1;
 	svc99Parms->numDatasets = numDatasets;
 	
-	cur = dsNameList->head;
+	cur = ddNameList->dsNodeList.head;
 	curDD = (VarStr_T*) &svc99Parms[1];
 	
 	while (cur != NULL) {
@@ -494,7 +529,7 @@ static int allocConcatenationReadOnly(OptInfo_T* optInfo, const char* ddName, DS
 		if (optInfo->verbose) {
 			fprintf(stderr, "Error code = %d Information code = %d\n", parmlist.__S99ERROR, parmlist.__S99INFO);
 		}
-		fprintf(stderr, "Error allocating concation for DDName %s\n", ddName);		
+		fprintf(stderr, "Error allocating concatenation for DDName %s\n", cur->tempDDName);		
 	}
 	return rc;
 }
@@ -522,7 +557,7 @@ static int allocDummy(OptInfo_T* optInfo, char* ddName) {
 	return rc;
 }	
 
-static int allocSteplib(OptInfo_T* optInfo, DSNameList_T* dsNameList) {
+static int allocSteplib(OptInfo_T* optInfo, DSNodeList_T* dsNodeList) {
 	fprintf(stderr, "Unable to allocate a STEPLIB DDName - use export STEPLIB instead\n");
 	return 16;
 
@@ -533,7 +568,7 @@ static int allocSteplib(OptInfo_T* optInfo, DSNameList_T* dsNameList) {
  
 	char* steplib;
 	char* pos;
-	DSNameNode_T* cur = dsNameList->head;
+	DSNode_T* cur = dsNodeList->head;
 	int length = 0;
 	
 	while (cur != NULL) {
@@ -546,7 +581,7 @@ static int allocSteplib(OptInfo_T* optInfo, DSNameList_T* dsNameList) {
 		return InternalOutOfMemory;
 	}
 	
-	cur = dsNameList->head;
+	cur = dsNodeList->head;
 	pos = steplib;
 	while (cur != NULL) {
 		int dsNameLen = strlen(cur->dsName);
@@ -587,16 +622,19 @@ static void printDDNames(DDNameList_T* ddNameList) {
 		} else if (ddNameList->isDummy) {
 			fprintf(stdout, "  %s=DUMMY\n", ddNameList->ddName);				
 		} else {
-			DSNameNode_T* dsNameNode = ddNameList->dsName->head;
+			DSNode_T* dsNode = ddNameList->dsNodeList.head;
 			fprintf(stdout, "  %s=", ddNameList->ddName);
-			while (dsNameNode != NULL) {
-				if (hasMemberName(dsNameNode)) {
-					fprintf(stdout, "%s(%s)", dsNameNode->dsName, dsNameNode->memName);
+			while (dsNode != NULL) {
+				if (hasMemberName(dsNode)) {
+					fprintf(stdout, "%s(%s)", dsNode->dsName, dsNode->memName);
 				} else {
-					fprintf(stdout, "%s", dsNameNode->dsName);
+					fprintf(stdout, "%s", dsNode->dsName);
 				}	
-				dsNameNode = dsNameNode->next;
-				if (dsNameNode != NULL) {
+				if (dsNode->isExclusive) {
+					fprintf(stdout, ",excl");
+				}
+				dsNode = dsNode->next;
+				if (dsNode != NULL) {
 					fprintf(stdout, ":");
 				} else {
 					fprintf(stdout, "\n");
@@ -625,15 +663,15 @@ ProgramFailure_T establishDDNames(OptInfo_T* optInfo) {
 			rc = allocDummy(optInfo, ddNameList->ddName);
 		} else {
 			if (!strcmp(ddNameList->ddName, STEPLIB_DDNAME)) {
-				rc = allocSteplib(optInfo, ddNameList->dsName);
-			} else if (ddNameList->dsName->head->next == NULL) {
-				if (hasMemberName(ddNameList->dsName->head)) {
-					rc = allocPDSMember(optInfo, ddNameList->ddName, ddNameList->dsName->head->dsName, ddNameList->dsName->head->memName);
+				rc = allocSteplib(optInfo, &ddNameList->dsNodeList);
+			} else if (ddNameList->dsNodeList.head->next == NULL) {
+				if (hasMemberName(ddNameList->dsNodeList.head)) {
+					rc = allocPDSMember(optInfo, ddNameList->ddName, ddNameList->dsNodeList.head);
 				} else {
-					rc = allocDataset(optInfo, ddNameList->ddName, ddNameList->dsName->head->dsName);
+					rc = allocDataset(optInfo, ddNameList->ddName, ddNameList->dsNodeList.head);
 				}	
 			} else {
-				rc = allocConcatenationReadOnly(optInfo, ddNameList->ddName, ddNameList->dsName);
+				rc = allocConcatenationReadOnly(optInfo, ddNameList);
 			}
 		}
 		if (rc > maxRC) {
@@ -653,8 +691,8 @@ ProgramFailure_T printToConsole(OptInfo_T* optInfo) {
 	DDNameList_T* ddNameList = optInfo->ddNameList;
 	while (ddNameList != NULL) {
 		if (ddNameList->isConsole) {
-			if (printDatasetToConsole(ddNameList->dsName->head->dsName)) {
-				optInfo->substitution = ddNameList->dsName->head->dsName;
+			if (printDatasetToConsole(ddNameList->dsNodeList.head->dsName)) {
+				optInfo->substitution = ddNameList->dsNodeList.head->dsName;
 				syntax(ErrorPrintingDatasetToConsole, optInfo); 
 				return ErrorPrintingDatasetToConsole;
 			}
@@ -669,12 +707,12 @@ ProgramFailure_T removeConsoleFiles(OptInfo_T* optInfo) {
 	DDNameList_T* ddNameList = optInfo->ddNameList;
 	while (ddNameList != NULL) {
 		if (ddNameList->isConsole) {
-			CIODatasetName(ddNameList->dsName->head->dsName, posixName);
+			CIODatasetName(ddNameList->dsNodeList.head->dsName, posixName);
 			if (optInfo->debug) {
-				fprintf(stdout, "Temporary Dataset %s retained for debug\n", ddNameList->dsName->head->dsName);
+				fprintf(stdout, "Temporary Dataset %s retained for debug\n", ddNameList->dsNodeList.head->dsName);
 			} else {
 				if (remove(posixName)) {
-					optInfo->substitution = ddNameList->dsName->head->dsName;
+					optInfo->substitution = ddNameList->dsNodeList.head->dsName;
 					syntax(ErrorDeletingTemporaryDataset, optInfo); 
 					return ErrorDeletingTemporaryDataset;
 				}

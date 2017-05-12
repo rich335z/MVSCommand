@@ -1,6 +1,7 @@
-rm bin/*.o
-rm bin/*.lst
-rm bin/mvscmd
-rm tests/*.expected
-rm tests/*.actual
-rm testsrc/*.cmd
+rm -f bin/*.o
+rm -f bin/*.lst
+rm -f bin/mvscmd
+rm -f bin/mvscmdauth
+rm -f tests/*.expected
+rm -f tests/*.actual
+rm -f testsrc/*.cmd

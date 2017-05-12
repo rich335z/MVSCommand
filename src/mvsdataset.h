@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2017 IBM.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *    Mike Fulton - initial implentation and documentation
+ *******************************************************************************/
 #ifndef __MVSDATASET__
 	#define __MVSDATASET__ 1
 	
@@ -6,6 +16,7 @@
 	#define OPEN_PAREN_CHAR '('
 	#define CLOSE_PAREN_CHAR ')'
 	#define SEPARATOR_CHAR ':'
+	#define OPTION_CHAR ','
 	
 	#define MAX_DATASET_LEN (44)
 	#define MAX_DATASET_LEN_STR "44"
@@ -18,39 +29,42 @@
 	#define STEPLIB_DDNAME "STEPLIB"
 	#define DUMMY_NAME "DUMMY"
 	#define CONSOLE_NAME "*"	
+	#define DISP_EXCL "excl"
+	#define DISP_OLD  "old"
 	
-	struct DSNameNode;
-	typedef struct DSNameNode {
-		struct DSNameNode* next;
+	struct DSNode;
+	typedef struct DSNode {
+		struct DSNode* next;
 		char tempDDName[MAX_NAME_LEN+1];
 		char dsName[MAX_DATASET_LEN+1]; 
 		char memName[MAX_MEMBER_LEN+1];
-	} DSNameNode_T;
+		int isExclusive:1;
+	} DSNode_T;
 	
-	struct DSNameList;
-	typedef struct DSNameList {
-		DSNameNode_T* head;
-		DSNameNode_T* tail;
-	} DSNameList_T;
+	struct DSNodeList;
+	typedef struct DSNodeList {
+		DSNode_T* head;
+		DSNode_T* tail;
+	} DSNodeList_T;
 	
-	static int hasMemberName(DSNameNode_T* dsNameNode) {
-		return (dsNameNode->memName[0] != '\0');
+	static int hasMemberName(DSNode_T* dsNode) {
+		return (dsNode->memName[0] != '\0');
 	}
-	static void setNoMemberName(DSNameNode_T* dsNameNode) {
-		dsNameNode->memName[0] = '\0';
+	static void setNoMemberName(DSNode_T* dsNode) {
+		dsNode->memName[0] = '\0';
 	}
-	static void setMemberName(DSNameNode_T* dsNameNode, const char* memName, int len) {
-		memcpy(dsNameNode->memName, memName, len);
-		dsNameNode->memName[len] = '\0';	
+	static void setMemberName(DSNode_T* dsNode, const char* memName, int len) {
+		memcpy(dsNode->memName, memName, len);
+		dsNode->memName[len] = '\0';	
 	}
 	
 	struct DDNameList;
 	typedef struct DDNameList {
 		struct DDNameList* next;
-		DSNameList_T* dsName;
+		DSNodeList_T dsNodeList;
 		char ddName[MAX_DDNAME_LEN+1];
 		int isConsole:1;
-		int isDummy:1;		
+		int isDummy:1;	
 	} DDNameList_T;
 	
 	#include "mvsargs.h"

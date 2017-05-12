@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2017 IBM.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *    Mike Fulton - initial implentation and documentation
+ *******************************************************************************/
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
@@ -29,7 +39,8 @@ static const char* ProgramFailureMessage[] = {
 	"Error deleting temporary dataset %s.\n",
 	"Error running 64 bit module %s with mvscmd (use mvscmd64).\n",
 	"Error running 31 bit module %s with mvscmd64 (use mvscmd).\n",	
-	"Error dubbing module %s as process.\n"
+	"Error dubbing module %s as process.\n",
+	"Invalid dataset option %s specified.\n"
 };
 
 
@@ -80,6 +91,8 @@ void printHelp() {
 	fprintf(stdout, "  Console example: --sysprint=*: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).\n");
 	fprintf(stdout, "  Dummy Dataset example: --sysin=dummy: allocate the DDName SYSIN to DUMMY\n");
 	fprintf(stdout, " Note: DD-names and the keyword DUMMY are case-insensitive. All other options are case-sensitive\n");
+	fprintf(stdout, " Example: Compare 2 PDS members 'old' and 'new' and write the output to stdout\n");
+	fprintf(stdout, "  mvscmd --pgm=isrsupc --args=\"DELTAL,LINECMP\" --newdd=ibmuser.in\\(new\\) --olddd=ibmuser.in\\(old\\) --sysin=ibmuser.cmd\\(superce\\) --outdd=*\n");	
 }	
 	
 	
