@@ -85,12 +85,13 @@ void printHelp() {
 	fprintf(stdout, " --args=<program-arguments> | -a=<program-arguments> (arguments to pass to the program, e.g. -a='MARGINS(1,72)'. Default is ''\n");
 	fprintf(stdout, " --verbose | -v (verbose messages). Default is off\n");
 	fprintf(stdout, " --debug | -d (even more verbose messages). Default is off.\n");
-	fprintf(stdout, " --<ddname>=<value> (specify a dataset, concatenated dataset, PDS member, console or dummy for the given ddname).\n");
+	fprintf(stdout, " --<ddname>=<value>[,excl|,old] (specify a dataset, concatenated dataset, PDS member, console or dummy for the given ddname).\n");
 	fprintf(stdout, "  Dataset example: --sysin=IBMUSER.TEST.OBJ: allocate the DDName SYSIN to the dataset IBMUSER.TEST.OBJ\n");
 	fprintf(stdout, "  Concatenated dataset example: --syslib=CEE.SCEELKED:CEE.SCEELKEX: allocate the ddname SYSLIB to the dataset concatenation CEE.SCEELKED:CEE.SCEELKEX\n");
 	fprintf(stdout, "  Console example: --sysprint=*: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).\n");
 	fprintf(stdout, "  Dummy Dataset example: --sysin=dummy: allocate the DDName SYSIN to DUMMY\n");
-	fprintf(stdout, " Note: DD-names and the keyword DUMMY are case-insensitive. All other options are case-sensitive\n");
+	fprintf(stdout, "  Dataset allocated as 'exclusive' (i.e. DISP=OLD) example: --archive=IBMUSER.MVSCMD.DAR,EXCL\n");
+	fprintf(stdout, " Note: DD-names and the keywords DUMMY, EXCL and OLD are case-insensitive. All other options are case-sensitive\n");
 	fprintf(stdout, " Example: Compare 2 PDS members 'old' and 'new' and write the output to stdout\n");
 	fprintf(stdout, "  mvscmd --pgm=isrsupc --args=\"DELTAL,LINECMP\" --newdd=ibmuser.in\\(new\\) --olddd=ibmuser.in\\(old\\) --sysin=ibmuser.cmd\\(superce\\) --outdd=*\n");	
 }	

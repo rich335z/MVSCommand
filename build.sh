@@ -5,6 +5,7 @@
 # LANGLVL(EXTENDED) is required because of the z-specific extensions that are utilized
 # Listings aren't required
 # 
+. ./setenv.sh
 cd bin
 rm -f mvscmd *.o *.lst
 c89 -c -Wa,list ../src/mvsload.s  >mvsload.lst 
