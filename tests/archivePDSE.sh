@@ -1,3 +1,10 @@
+#
+# Use IEBCOPY to archive a PDSE into a sequential dataset suitable for (binary) transmission via FTP, SCP, XMIT, ...
+# The example also restores the PDSE and then runs the programs to ensure they are ok.
+# Pros of IEBCOPY over ADRDSU and XMIT: Does not require APF authority. Uses JCL instead of TSO 
+# Cons of IEBCOPY: Uses JCL instead of TSO so if you are sending it to someone, they may prefer the file in XMIT format
+#
+
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IEBCOPY.DAR'"\) recfm\(u\) lrecl\(0\) blksize\(32760\) dsorg\(ps\) dsntype\(basic\) catalog tracks space\(1000,1000\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IEBCOPY.LOAD'"\) recfm\(u\) lrecl\(0\) blksize\(32760\) dsorg\(po\) dsntype\(library\) catalog tracks space\(1000,1000\) >/dev/null 2>&1
 

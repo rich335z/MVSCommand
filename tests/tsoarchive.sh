@@ -1,3 +1,9 @@
+#
+# Run batch TSO (IKJEFT01) to archive a PDSE of 2 programs, then delete the PDSE, then restore it, then run the programs to ensure the restore worked.
+# Pros of IKJEFT01 over ADRDSU and IEBCOPY: It is the most common way to archive/restore a dataset on z/OS
+# Cons of IKJEFT01: It is TSO based - some people do not like TSO and prefer JCL (IEBCOPY) or a more powerful archiving system (ADRDSU)
+#
+
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.TSO.DAR'"\) recfm\(u\) lrecl\(0\) blksize\(32760\) dsorg\(ps\) dsntype\(basic\) catalog tracks space\(1000,1000\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.TSO.LOAD'"\) recfm\(u\) lrecl\(0\) blksize\(32760\) dsorg\(po\) dsntype\(library\) catalog tracks space\(1000,1000\) >/dev/null 2>&1
 

@@ -1,3 +1,9 @@
+#
+# Run ADRDSU to take a set of datasets and write them to an archive.
+# Pros of ADRDSU over IKJEFT01 and IEBCOPY: easy to take a very large number of datasets and archive them
+# Cons: requires APF authorization to run the command because of this power
+#
+
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.ADRDSU.DAR'"\) recfm\(u\) lrecl\(0\) blksize\(32760\) dsorg\(ps\) dsntype\(basic\) catalog tracks space\(1000,1000\) >/dev/null 2>&1
 
 (

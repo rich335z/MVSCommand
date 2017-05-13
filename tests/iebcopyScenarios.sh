@@ -1,3 +1,8 @@
+#
+# Run IEBCOPY twice. First, to copy 2 of 3 PDSE members to a target dataset (copysome). 
+# Second, to copy all PDSE members to a target dataset (copyall).
+#
+
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IEBCOPY.COPYSOME'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IEBCOPY.COPYALL'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 

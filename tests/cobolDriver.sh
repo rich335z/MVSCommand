@@ -1,3 +1,8 @@
+#
+# Runs the COBOL compiler on a simple program. Unfortunately, the COBOL compiler needs a whole bunch of 
+# work datasets in order to operate. This example writes the listing to dummy (because it can).
+#
+
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.COBOL.OBJ'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.COBOL.SYSUT1'"\) dsorg\(ps\) catalog tracks space\(100,10\) >/dev/null 2>&1
