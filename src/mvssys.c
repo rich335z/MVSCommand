@@ -18,12 +18,11 @@
 #define _POSIX_SOURCE
 #include <sys/wait.h>
 
+#include "mvsmsgs.h"
 #include "mvsdataset.h"
 #include "mvssys.h"
 #include "mvsargs.h"
 #include "mvsutil.h"
-
-#define USE_ATTACH_MVS 1
 
 static const char* prtAMode(AddressingMode_T amode) {
 	switch(amode) {
@@ -52,17 +51,17 @@ static void setprogInfo(OptInfo_T* optInfo, ProgramInfo_T* progInfo, unsigned lo
 	 
 	if (optInfo->verbose) {
 		if (progInfo->APFAuthorized) {
-			fprintf(stdout, "Program is APF authorized\n"); 
+			printInfo(InfoAPFAuthorized); 
 		}
-#if 0
+		printInfo(InfoAddressingMode, prtAMode(progInfo->amode));
+	}
+	if (optInfo->debug) {	
 		if (progInfo->programSize == 0) {
-			fprintf(stdout, "Program is multi-segment program object or very large. Size unknown\n");
+			printInfo(InfoProgramSizeUnknown);
 		} else {
-			fprintf(stdout, "Program size is %d bytes\n", (progInfo->programSize << 3));
+			printInfo(InfoProgramSize, (progInfo->programSize << 3));
 		}
-		fprintf(stdout, "Program loaded at 0x%llX\n", progInfo->fp);
-#endif
-		fprintf(stdout, "Addressing mode: %s\n", prtAMode(progInfo->amode));
+		printInfo(InfoProgramLoadAddress, progInfo->fp);
 	}
 }
 
@@ -81,75 +80,59 @@ static int call24BitProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
     progInfo->rc = rc;
 
     if (optInfo->verbose) {
-		fprintf(stdout, "%s run. Return code:%d\n", optInfo->programName, progInfo->rc);
+		printInfo(InfoProgramReturnCode, optInfo->programName, progInfo->rc);
     }
 	
 	return rc;
 }
 
-#if USE_ATTACH_MVS
-	
-	#pragma linkage(ATTMVS, OS)
-	#pragma map(ATTMVS, "ATTMVS")
-	void ATTMVS(int* pgmNameLen, const char* pgmName, int* argsLen, const char* args, void** exitAddr, void** exitParm, int* retVal, int* retCode, int* reasonCode);
-	
-	static int call31BitOr64BitProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
-		char pgmName[MAX_NAME_LEN+1];
-		int pgmNameLen;
-		int argsLen = strlen(optInfo->arguments);
-		const char* args = optInfo->arguments;
-		void* exitAddr = NULL;
-		void* exitParm = NULL;
-		int retVal = 0;
-		int retCode = 0;
-		int reasonCode = 0;
-	
-		strcpy(pgmName, optInfo->programName);
-		uppercase(pgmName);
-		pgmNameLen = strlen(pgmName);
-		ATTMVS(&pgmNameLen, pgmName, &argsLen, args, &exitAddr, &exitParm, &retVal, &retCode, &reasonCode);
+#pragma linkage(ATTMVS, OS)
+#pragma map(ATTMVS, "ATTMVS")
+void ATTMVS(int* pgmNameLen, const char* pgmName, int* argsLen, const char* args, void** exitAddr, void** exitParm, int* retVal, int* retCode, int* reasonCode);
+
+static int call31BitOr64BitProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
+	char pgmName[MAX_NAME_LEN+1];
+	int pgmNameLen;
+	int argsLen = strlen(optInfo->arguments);
+	const char* args = optInfo->arguments;
+	void* exitAddr = NULL;
+	void* exitParm = NULL;
+	int retVal = 0;
+	int retCode = 0;
+	int reasonCode = 0;
+
+	strcpy(pgmName, optInfo->programName);
+	uppercase(pgmName);
+	pgmNameLen = strlen(pgmName);
+	ATTMVS(&pgmNameLen, pgmName, &argsLen, args, &exitAddr, &exitParm, &retVal, &retCode, &reasonCode);
+	if (optInfo->debug) {
+		printInfo(InfoProgramAttachInfo, pgmName, retVal, retCode, reasonCode);
+	}
+	if (retVal == -1) {
+		progInfo->rc = retCode;
+	} else {
+		int pid = retVal;
+		int status = 0;
 		if (optInfo->debug) {
-			fprintf(stdout, "%s attached. Return val:%d code:%d reason:%d\n", pgmName, retVal, retCode, reasonCode);
+			printInfo(InfoWaitingOnPID, pid);
 		}
-		if (retVal == -1) {
-			progInfo->rc = retCode;
+		if ((pid = waitpid(pid, &status, 0)) == -1) {
+			perror("");
+			printError(ErrorWaitingForPID, retVal);
 		} else {
-			int pid = retVal;
-			int status = 0;
-			if (optInfo->debug) {
-				fprintf(stdout, "Waiting on pid:%d\n", pid);
-			}
-			if ((pid = waitpid(pid, &status, 0)) == -1) {
-				perror("Error waiting for program to complete");
+			if (WIFEXITED(status)) {
+				if (optInfo->verbose) {
+					printInfo(InfoAttachExitCode, WEXITSTATUS(status), pgmName);
+				}
+				progInfo->rc = WEXITSTATUS(status);
 			} else {
-				if (WIFEXITED(status)) {
-					if (optInfo->verbose) {
-						fprintf(stdout, "Exit code: %d from %s\n", WEXITSTATUS(status), pgmName);
-					}
-					progInfo->rc = WEXITSTATUS(status);
-				} else {
-					fprintf(stderr, "child did not exit successfully");
-					progInfo->rc = -1;
-			    }	
-			}
+				printError(ErrorChildCompletion, pgmName);
+				progInfo->rc = -1;
+		    }	
 		}
-	
-		return progInfo->rc;
 	}
-#else
-	static int call31BitOr64BitProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
-		char cmdLine[MAX_SYSTEM_CMDLINE_LENGTH+1];
-		sprintf(cmdLine, SYSTEM_FORMAT_SPECIFIER, optInfo->programName, optInfo->arguments);
-		int rc = system(cmdLine);
-		progInfo->rc = rc;
-		
-		if (optInfo->verbose) {
-			fprintf(stdout, "%s run. Return code:%d\n", cmdLine, progInfo->rc);
-		}
-		
-		return rc;
-	}
-#endif
+	return progInfo->rc;
+}
 
 static int call64BitProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 	int rc;
@@ -164,8 +147,8 @@ static int IAm64Bit() {
 #pragma map(SETDUBDF, "SETDUBDF")
 void SETDUBDF(int* dubVal, int* retVal, int* retCode, int* reasonCode);
 
-ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
-	ProgramFailure_T rc = NoError;
+ProgramFailureMsg_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
+	ProgramFailureMsg_T rc = NoError;
 	if (progInfo->amode == AMODE24) {
 		progInfo->rc = call24BitProgram(optInfo, progInfo);
 		rc = NoError;
@@ -192,8 +175,7 @@ ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 		}
 	}	
 	if (rc != NoError) {
-		allocSubstitutionStr(optInfo, optInfo->programName, strlen(optInfo->programName));
-		syntax(rc, optInfo);		
+		printError(rc, optInfo->programName);
 	}
 	return rc;			 
 }
@@ -202,7 +184,7 @@ ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 #pragma map(LOAD, "LOAD")
 int LOAD(const char* module, unsigned int* info, unsigned long long* fp);
 
-ProgramFailure_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
+ProgramFailureMsg_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 	unsigned long long fp = 0xFFFFFFFFFFFFFFFFLL;
 	char program[MAX_NAME_LEN+1];
 	int rc;
@@ -210,7 +192,7 @@ ProgramFailure_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 
 	uppercaseAndPad(program, optInfo->programName, MAX_NAME_LEN);
 	if (optInfo->verbose) {
-		fprintf(stdout, "OS Load program %s\n", program);
+		printInfo(InfoLoadProgram, program);
 	}
 	rc = LOAD(program, &info, &fp);
 	if (rc == 0) {
@@ -218,10 +200,9 @@ ProgramFailure_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 		return NoError;
 	} else {
 		if (optInfo->verbose) {
-			fprintf(stdout, "OS Load of %s failed with 0x%x\n", program, rc);
+			printInfo(InfoLoadProgramDetails, program, rc);
 		}
-		allocSubstitutionStr(optInfo, program, strlen(program));
-		syntax(UnableToFetchProgram, optInfo);
+		printError(UnableToFetchProgram, program);
 		
 		return UnableToFetchProgram;
 	}

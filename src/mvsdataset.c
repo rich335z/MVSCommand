@@ -16,6 +16,7 @@
 #include <env.h>
 #include <string.h>
 
+#include "mvsmsgs.h"
 #include "mvsdataset.h"
 #include "mvsargs.h"
 #include "mvsutil.h"
@@ -38,7 +39,39 @@ static const char* prtStrPointer(const char* p) {
 	}
 }
 
-static ProgramFailure_T allocDDNode(DDNameList_T** ddNameList) {
+static void SteplibAllocationError(const char* steplib) {
+	printError(ErrorAllocatingSTEPLIB, steplib);
+}
+
+static void ConsoleAllocationError(__dyn_t* ip) {
+	char* ddName = ip->__ddname;
+	char* dsName = ip->__dsname;
+	printError(ErrorAllocatingCONSOLE, ddName, dsName);	
+}
+
+static void ConcatenationAllocationError(DDNameList_T* ddNameList, struct __S99struc* parmlist) {
+	char* ddName = ddNameList->ddName;
+	printError(ErrorAllocatingConcatenation, ddName);	
+}
+
+static void DatasetAllocationError(__dyn_t* ip) {
+	char* ddName = ip->__ddname;
+	char* dsName = ip->__dsname;	
+	printError(ErrorAllocatingDataset, ddName, dsName);	 	
+}
+
+static void PDSMemberAllocationError(__dyn_t* ip) {
+	char* ddName = ip->__ddname;
+	char* dsName = ip->__dsname;
+	char* memName= ip->__member;
+	printError(ErrorAllocatingPDSMember, ddName, dsName, memName);	}
+
+static void DummyAllocationError(__dyn_t* ip) {
+	char* ddName = ip->__ddname;
+	printError(ErrorAllocatingDUMMY, ddName); 	
+}
+
+static ProgramFailureMsg_T allocDDNode(DDNameList_T** ddNameList) {
 	DDNameList_T* newDDNode = malloc(sizeof(DDNameList_T));
 	if (newDDNode == NULL) {
 		return InternalOutOfMemory;
@@ -54,7 +87,7 @@ static void freeDDNode(DDNameList_T* node) {
 	free(node);
 }
 
-static ProgramFailure_T allocDSNode(DSNodeList_T* dsNodeList) {
+static ProgramFailureMsg_T allocDSNode(DSNodeList_T* dsNodeList) {
 	DSNode_T* newNode = malloc(sizeof(DSNode_T));
 	if (newNode == NULL) {
 		return InternalOutOfMemory;
@@ -91,7 +124,7 @@ static int isMVSNumber(int c) {
 	return isdigit(c);
 }
 
-ProgramFailure_T validMVSName(const char* name) {
+ProgramFailureMsg_T validMVSName(const char* name) {
 	const int len = strlen(name);
 	int i;
 	if (len == 0) {
@@ -112,27 +145,27 @@ ProgramFailure_T validMVSName(const char* name) {
 	return NoError;
 }
 
-static ProgramFailure_T validProgramName(const char* name) {
+static ProgramFailureMsg_T validProgramName(const char* name) {
 	return validMVSName(name);
 }
 
-static ProgramFailure_T validDDName(const char* name) {
+static ProgramFailureMsg_T validDDName(const char* name) {
 	return validMVSName(name);
 }
-static ProgramFailure_T validQualifierName(const char* name) {
+static ProgramFailureMsg_T validQualifierName(const char* name) {
 	return validMVSName(name);
 }
-static ProgramFailure_T validMemberName(const char* name) {
+static ProgramFailureMsg_T validMemberName(const char* name) {
 	return validMVSName(name);
 }
 
-static ProgramFailure_T validDatasetName(const char* buffer, int start, int end, OptInfo_T* optInfo) {
+static ProgramFailureMsg_T validDatasetName(const char* buffer, int start, int end, OptInfo_T* optInfo) {
 	char qualifier[MAX_QUALIFIER_LEN+1];
 	char member[MAX_MEMBER_LEN+1];
 	int prevDot=start-1;
 	int openParen=-1;
 	int i;
-	ProgramFailure_T rc = NoError;
+	ProgramFailureMsg_T rc = NoError;
 	int len = end-start;
 
 	if (len == 0) {
@@ -143,22 +176,22 @@ static ProgramFailure_T validDatasetName(const char* buffer, int start, int end,
 		if (buffer[i] == DOT_CHAR || buffer[i] == OPEN_PAREN_CHAR || i == end) {
 			const char* qualifierName = &buffer[prevDot+1];
 			if (i-prevDot-1 > MAX_QUALIFIER_LEN) {
-				allocSubstitutionStr(optInfo, qualifierName, i-prevDot-1);
+				printError(MVSNameTooLong, i-prevDot-1, qualifierName, MAX_NAME_LEN);
 				return MVSNameTooLong;
 			}
 			if (i-prevDot == 1) {
-				allocSubstitutionStr(optInfo, &buffer[start], len);
+				printError(InvalidDatasetName, len, &buffer[start]);
 				return InvalidDatasetName;
 			}
 			memcpy(qualifier, qualifierName, i-prevDot-1);
 			qualifier[i-prevDot-1] = '\0';
 			if (optInfo->debug) {
-				fprintf(stdout, "Check validity of qualifier <%s>\n", qualifier);
+				printInfo(InfoQualifierValidity, qualifier);
 			}
 			
 			rc = validQualifierName(qualifier);
 			if (rc != NoError) {
-				allocSubstitutionStr(optInfo, qualifier, i-prevDot-1);
+				printError(rc, i-prevDot-1, qualifier);
 				return rc;
 			}
 			if (buffer[i] == DOT_CHAR) {
@@ -171,34 +204,34 @@ static ProgramFailure_T validDatasetName(const char* buffer, int start, int end,
 	}
 	if (openParen >= 0) {
 		if (openParen == 0) {
-			allocSubstitutionStr(optInfo, &buffer[start], len);
+			printError(InvalidDatasetName, len, &buffer[start]);
 			return InvalidDatasetName;
 		}
 		if (openParen > MAX_DATASET_LEN) {
-			allocSubstitutionStr(optInfo, &buffer[start], openParen-start);
+			printError(DatasetNameTooLong, openParen-start, &buffer[start], MAX_DATASET_LEN);
 			return DatasetNameTooLong;
 		}
 		if (buffer[end-1] != CLOSE_PAREN_CHAR) {
-			allocSubstitutionStr(optInfo, &buffer[start], len);
+			printError(InvalidDatasetName, len, &buffer[start]);
 			return InvalidDatasetName;
 		}
 		if (end-openParen-2 > MAX_MEMBER_LEN) {
-			allocSubstitutionStr(optInfo, &buffer[openParen+1], end-openParen-2);
+			printError(MVSNameTooLong, end-openParen-2, &buffer[openParen+1], MAX_NAME_LEN);
 			return MVSNameTooLong;			
 		}
 		memcpy(member, &buffer[openParen+1], end-openParen-2);
 		member[end-openParen-2] = '\0';
 		if (optInfo->debug) {
-			fprintf(stdout, "Check validity of member name <%s>\n", member);
+			printInfo(InfoMemberValidity, member);
 		}		
 		rc = validMemberName(member);
 		if (rc != NoError) {
-			allocSubstitutionStr(optInfo, member, end-openParen-1);
+			printError(rc, end-openParen-1, member);
 			return rc;
 		}
 	} else {
 		if (len > MAX_DATASET_LEN) {
-			allocSubstitutionStr(optInfo, buffer, len);
+			printError(DatasetNameTooLong, len, buffer, MAX_DATASET_LEN);
 			return DatasetNameTooLong;
 		}		
 	}	
@@ -229,9 +262,9 @@ static void copyDSNameAndMember(DSNode_T* entry, const char* buffer, int start, 
 	}
 }
 
-ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
+ProgramFailureMsg_T addDDName(const char* option, OptInfo_T* optInfo) {
 	int optLen = strlen(option);
-	ProgramFailure_T rc = allocDDNode(&optInfo->ddNameList);
+	ProgramFailureMsg_T rc = allocDDNode(&optInfo->ddNameList);
 	int assignPos=-1, i;
 	int dsNameStartPos;
 	DDNameList_T* entry = optInfo->ddNameList;
@@ -245,11 +278,13 @@ ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 		}
 	}
 	if (assignPos < 0) {
-		allocSubstitutionStr(optInfo, option, optLen);
+		printError(UnrecognizedOption, optLen, option);
 		return UnrecognizedOption;
 	}
 	if (assignPos > MAX_DDNAME_LEN) {
-		allocSubstitutionStr(optInfo, option, assignPos);
+		printf("assignpos:%d option:<%s>, length:%d\n", assignPos, option, MAX_NAME_LEN);
+		fflush(stdout);
+		printError(MVSNameTooLong, assignPos, option, MAX_NAME_LEN);
 		return MVSNameTooLong;
 	}
 
@@ -257,7 +292,7 @@ ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 	entry->ddName[assignPos] = '\0';
 	rc = validDDName(entry->ddName);
 	if (rc != NoError) {
-		allocSubstitutionStr(optInfo, option, assignPos);
+		printError(rc, assignPos, option);
 		return rc;
 	}
 	uppercase(entry->ddName);
@@ -293,7 +328,7 @@ ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 				dsNameStartPos=i+1;
 			} else {
 				if (rc == NoDatasetName) {
-					allocSubstitutionStr(optInfo, option, assignPos);
+					printError(NoDatasetName, assignPos, option);
 				} 
 				freeDDNode(entry);
 				break;
@@ -304,13 +339,13 @@ ProgramFailure_T addDDName(const char* option, OptInfo_T* optInfo) {
 	if (option[i] == OPTION_CHAR) {
 		const char* subOpt = &option[i+1]; 
 		if (optInfo->debug) {
-			fprintf(stdout, "Check option <%s>\n", subOpt);
+			printInfo(InfoCheckOption, subOpt);
 		}		
 
 		if (!strnocasecmp(subOpt, DISP_OLD) || !strnocasecmp(subOpt, DISP_EXCL)) {
 			entry->dsNodeList.tail->isExclusive = 1;
 		} else {
-			allocSubstitutionStr(optInfo, &option[i+1], optLen-i);	
+			printError(InvalidDatasetOption, optLen-i, &option[i+1]);	
 			rc = InvalidDatasetOption;
 		}
 	}
@@ -337,10 +372,10 @@ static int allocPDSMember(OptInfo_T* optInfo, char* ddName, DSNode_T* dsNode) {
 	errno = 0;
 	rc = dynalloc(&ip); 
 	if (rc) {
-   		fprintf(stdout, "PDS Member allocation failed for %s=%s(%s). Error code 0x%x, info code %d\n", ddName, dsNode->dsName, dsNode->memName, ip.__errcode, ip.__infocode);
+		PDSMemberAllocationError(&ip);
 	} else {
    		if (optInfo->verbose) {
-   			fprintf(stdout, "PDS Member allocation succeeded for %s=%s(%s)\n", ddName, dsNode->dsName, dsNode->memName);
+   			printInfo(InfoPDSMemberAllocationSucceeded, ddName, dsNode->dsName, dsNode->memName);
    		}
    	}
 	return rc;
@@ -364,10 +399,10 @@ static int allocDataset(OptInfo_T* optInfo, char* ddName, DSNode_T* dsNode) {
 	errno = 0;
 	rc = dynalloc(&ip); 
 	if (rc) {
-		fprintf(stdout, "Dataset allocation failed for %s=%s. Error code 0x%x, info code %d\n", ddName, dsNode->dsName, ip.__errcode, ip.__infocode);
+		DatasetAllocationError(&ip);
 	} else {
    		if (optInfo->verbose) {
-   			fprintf(stdout, "Dataset allocation succeeded for %s=%s\n", ddName, dsNode->dsName);
+   			printInfo(InfoDatasetAllocationSucceeded, ddName, dsNode->dsName);
    		}
    	}
 	return rc;
@@ -414,12 +449,10 @@ static int allocConsole(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
 	errno = 0;
 	rc = dynalloc(&ip); 
 	if (rc) {
-		if (optInfo->verbose) {
-			fprintf(stdout, "SYSOUT dynamic allocation failed for %s=%s (sysout) with errno %d error code %d, info code %d\n", ddNameList->ddName, node->dsName, errno, ip.__errcode, ip.__infocode);
-		}
+		ConsoleAllocationError(&ip);
 	} else {
    		if (optInfo->verbose) {
-   			fprintf(stdout, "Dynamic allocation succeeded for %s (temporary dataset for console)\n", ddNameList->ddName);
+   			printInfo(InfoConsoleDatasetAllocationSucceeded, ddNameList->ddName);
    		}
    	}
 	return rc;
@@ -479,13 +512,12 @@ static int allocConcatenationReadOnly(OptInfo_T* optInfo, DDNameList_T* ddNameLi
 			rc = allocDataset(optInfo, cur->tempDDName, cur);
 		}
 		if (optInfo->verbose) {
-			fprintf(stdout, "DDName %s allocated to Dataset %s\n", cur->tempDDName, cur->dsName);
+			printInfo(InfoConcatenatedDatasetAllocationSucceeded, cur->tempDDName, cur->dsName, numDatasets);
 		}
 		if (rc) {
 			if (rc > maxRC) {
 				maxRC = rc;
 			}
-			fprintf(stderr, "Error allocating dataset %s\n", cur->dsName);
 		}
 		totSize += (sizeof(short) + strlen(cur->tempDDName));
 		++numDatasets;
@@ -526,10 +558,7 @@ static int allocConcatenationReadOnly(OptInfo_T* optInfo, DDNameList_T* ddNameLi
 	
 	rc = svc99(&parmlist);
 	if (rc) {
-		if (optInfo->verbose) {
-			fprintf(stderr, "Error code = %d Information code = %d\n", parmlist.__S99ERROR, parmlist.__S99INFO);
-		}
-		fprintf(stderr, "Error allocating concatenation for DDName %s\n", cur->tempDDName);		
+		ConcatenationAllocationError(ddNameList, &parmlist);
 	}
 	return rc;
 }
@@ -546,26 +575,21 @@ static int allocDummy(OptInfo_T* optInfo, char* ddName) {
 	errno = 0;
 	rc = dynalloc(&ip); 
 	if (rc) {
-		if (optInfo->verbose) {
-			fprintf(stdout, "DUMMY dynalloc failed for %s=DUMMY with error code %d, info code %d\n", ddName, ip.__errcode, ip.__infocode);
-		}
+		DummyAllocationError(&ip);
 	} else {
    		if (optInfo->verbose) {
-   			fprintf(stdout, "DUMMY Dynalloc succeeded for %s=DUMMY\n", ddName);
+   			printInfo(InfoDummyDatasetAllocationSucceeded, ddName);
    		}
    	}
 	return rc;
 }	
 
 static int allocSteplib(OptInfo_T* optInfo, DSNodeList_T* dsNodeList) {
-	fprintf(stderr, "Unable to allocate a STEPLIB DDName - use export STEPLIB instead\n");
-	return 16;
-
 /*
  * We can not set up STEPLIB at this point - it is too late. This would set up the 
  * STEPLIB for the program we are calling, but if the program itself needs the STEPLIB
  * (which is the typical case), then this will not help
- 
+ */
 	char* steplib;
 	char* pos;
 	DSNode_T* cur = dsNodeList->head;
@@ -593,51 +617,59 @@ static int allocSteplib(OptInfo_T* optInfo, DSNodeList_T* dsNodeList) {
 		}
 		cur = cur->next;
 	}
+	
+	SteplibAllocationError(steplib);
+	
+	free(steplib);
+	
+	return 16;
+	
+#if 0
 	if (setenv(STEPLIB_DDNAME, steplib, 1)) {
 		perror("STEPLIB DDName allocation");
 		fprintf(stderr, "Dataset allocation failed for %s=%s\n", STEPLIB_DDNAME, steplib);
 		return 16;
 	} else {
 		if (optInfo->verbose) {
-			fprintf(stdout, "Dataset allocation succeeded for %s=%s\n", STEPLIB_DDNAME, steplib);
+			printInfo(Info,"Dataset allocation succeeded for %s=%s\n", STEPLIB_DDNAME, steplib);
 		}
 	}
 	return 0; 
- */
+#endif
 
 }	
 	
 static void printProgramInfo(const char* programName, const char* arguments) {
-	fprintf(stdout, "Program: <%s> Arguments: <%s>\n", prtStrPointer(programName), prtStrPointer(arguments));
+	printInfo(InfoProgramName, prtStrPointer(programName), prtStrPointer(arguments));
 }
 
 static void printDDNames(DDNameList_T* ddNameList) {	
-	fprintf(stdout, "DDNames:\n");
+	printInfo(InfoDDNameHeader);
 	if (ddNameList == NULL) {
-		fprintf(stdout, "  No DDNames specified\n");
+		printInfo(InfoNoDDNames);
 	}
 	while (ddNameList != NULL) {
 		if (ddNameList->isConsole) {
-			fprintf(stdout, "  %s=*\n", ddNameList->ddName);	
+			printInfo(InfoConsoleDDName, ddNameList->ddName);	
 		} else if (ddNameList->isDummy) {
-			fprintf(stdout, "  %s=DUMMY\n", ddNameList->ddName);				
+			printInfo(InfoDummyDDName, ddNameList->ddName);				
 		} else {
 			DSNode_T* dsNode = ddNameList->dsNodeList.head;
-			fprintf(stdout, "  %s=", ddNameList->ddName);
+			printInfo(InfoDDName, ddNameList->ddName);
 			while (dsNode != NULL) {
 				if (hasMemberName(dsNode)) {
-					fprintf(stdout, "%s(%s)", dsNode->dsName, dsNode->memName);
+					printInfo(InfoPDSMemberName, dsNode->dsName, dsNode->memName);
 				} else {
-					fprintf(stdout, "%s", dsNode->dsName);
+					printInfo(InfoDatasetName, dsNode->dsName);
 				}	
 				if (dsNode->isExclusive) {
-					fprintf(stdout, ",excl");
+					printInfo(InfoExclusive);
 				}
 				dsNode = dsNode->next;
 				if (dsNode != NULL) {
-					fprintf(stdout, ":");
+					printInfo(InfoConcatenationSeparator);
 				} else {
-					fprintf(stdout, "\n");
+					printInfo(InfoNewline);
 				}
 			}
 		}
@@ -646,7 +678,7 @@ static void printDDNames(DDNameList_T* ddNameList) {
 }
 
 
-ProgramFailure_T establishDDNames(OptInfo_T* optInfo) {
+ProgramFailureMsg_T establishDDNames(OptInfo_T* optInfo) {
 	DDNameList_T* ddNameList = optInfo->ddNameList;
 	int rc;
 	int maxRC = 0;
@@ -687,13 +719,12 @@ ProgramFailure_T establishDDNames(OptInfo_T* optInfo) {
 	}
 }
 
-ProgramFailure_T printToConsole(OptInfo_T* optInfo) {
+ProgramFailureMsg_T printToConsole(OptInfo_T* optInfo) {
 	DDNameList_T* ddNameList = optInfo->ddNameList;
 	while (ddNameList != NULL) {
 		if (ddNameList->isConsole) {
 			if (printDatasetToConsole(ddNameList->dsNodeList.head->dsName)) {
-				optInfo->substitution = ddNameList->dsNodeList.head->dsName;
-				syntax(ErrorPrintingDatasetToConsole, optInfo); 
+				printError(ErrorPrintingDatasetToConsole, ddNameList->dsNodeList.head->dsName); 
 				return ErrorPrintingDatasetToConsole;
 			}
 		}
@@ -702,18 +733,17 @@ ProgramFailure_T printToConsole(OptInfo_T* optInfo) {
 	return NoError;
 }
 
-ProgramFailure_T removeConsoleFiles(OptInfo_T* optInfo) {
+ProgramFailureMsg_T removeConsoleFiles(OptInfo_T* optInfo) {
 	char posixName[MAX_DATASET_LEN+5];
 	DDNameList_T* ddNameList = optInfo->ddNameList;
 	while (ddNameList != NULL) {
 		if (ddNameList->isConsole) {
 			CIODatasetName(ddNameList->dsNodeList.head->dsName, posixName);
 			if (optInfo->debug) {
-				fprintf(stdout, "Temporary Dataset %s retained for debug\n", ddNameList->dsNodeList.head->dsName);
+				printInfo(InfoTemporaryDatasetRetained, ddNameList->dsNodeList.head->dsName);
 			} else {
 				if (remove(posixName)) {
-					optInfo->substitution = ddNameList->dsNodeList.head->dsName;
-					syntax(ErrorDeletingTemporaryDataset, optInfo); 
+					printError(ErrorDeletingTemporaryDataset, ddNameList->dsNodeList.head->dsName); 
 					return ErrorDeletingTemporaryDataset;
 				}
 			}

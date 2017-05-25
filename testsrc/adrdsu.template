@@ -9,7 +9,7 @@ Dataset allocation succeeded for ARCHIVE=@@HLQ@@.MVSCMD.ADRDSU.DAR
 OS Load program ADRDSSU 
 Program is APF authorized
 Addressing mode: AMODE31
-Exit code: 0 from ADRDSSU
+Attach Exit code: 0 from ADRDSSU
 - DUMP OUTDD(ARCHIVE) -
     DS(INCL(@@HLQ@@.MVSCMD.IEBCOPY.**))
  ADR101I (R/I)-RI01 (01), TASKID 001 HAS BEEN ASSIGNED TO COMMAND 'DUMP '

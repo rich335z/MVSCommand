@@ -5,17 +5,17 @@ DDNames:
   SYSLMOD=@@HLQ@@.MVSCMD.BIND.LOAD(BIND)
   SYSLIN=@@HLQ@@.MVSCMD.BIND.OBJ(BIND)
 Dataset allocation succeeded for SYSLIB=CEE.SCEELKED
-DDName SYSLIB allocated to Dataset CEE.SCEELKED
+DDName SYSLIB allocated to Concatenated Dataset CEE.SCEELKED (0)
 Dataset allocation succeeded for SYS00001=CEE.SCEELKEX
-DDName SYS00001 allocated to Dataset CEE.SCEELKEX
+DDName SYS00001 allocated to Concatenated Dataset CEE.SCEELKEX (1)
 Dataset allocation succeeded for SYS00002=CEE.SCEECPP
-DDName SYS00002 allocated to Dataset CEE.SCEECPP
+DDName SYS00002 allocated to Concatenated Dataset CEE.SCEECPP (2)
 Dynamic allocation succeeded for SYSPRINT (temporary dataset for console)
 PDS Member allocation succeeded for SYSLMOD=@@HLQ@@.MVSCMD.BIND.LOAD(BIND)
 PDS Member allocation succeeded for SYSLIN=@@HLQ@@.MVSCMD.BIND.OBJ(BIND)
 OS Load program HEWL    
 Addressing mode: AMODE31
-Exit code: 0 from HEWL
+Attach Exit code: 0 from HEWL
  IEW2278I B352 INVOCATION PARAMETERS - MAP                                                                               
                                                                                                                          
 1                         *** M O D U L E  M A P ***                                                                     

@@ -11,10 +11,11 @@ rm -f mvscmd *.o *.lst
 c89 -c -Wa,list ../src/mvsload.s  >mvsload.lst 
 c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvsutil.c
 c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvsargs.c
+c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvsmsgs.c
 c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvsdataset.c
 c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvssys.c
 c89 -c -O2 -Wc,xplink\(OSCALL\(UPSTACK\)\),gonum,offset,langlvl\(extended\),list\(./\) ../src/mvscmd.c
-c89 -o mvscmd -O2 -Wl,xplink,ac=1 mvscmd.o mvsargs.o mvsdataset.o mvssys.o mvsutil.o mvsload.o 
+c89 -o mvscmd -O2 -Wl,xplink,ac=1 mvscmd.o mvsargs.o mvsdataset.o mvssys.o mvsutil.o mvsload.o mvsmsgs.o
 cp mvscmd //"'"${AUTHHLQ}.${AUTHSFX}\(MVSCMD\)"'"
 rm -rf mvscmdauth
 ln -e MVSCMD mvscmdauth

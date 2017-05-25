@@ -20,11 +20,12 @@
 #define _POSIX_SOURCE
 #include <sys/wait.h>
 
+#include "mvsmsgs.h"
 #include "mvsdataset.h"
 #include "mvssys.h"
 #include "mvsargs.h"
 
-static ProgramFailure_T establishEnvironment() {
+static ProgramFailureMsg_T establishEnvironment() {
 	if (setenv("__POSIX_TMPNAM", "NO", 1)) {
 		return UnableToEstablishEnvironment;
 	}
@@ -35,20 +36,19 @@ static ProgramFailure_T establishEnvironment() {
 }
 
 int main(int argc, char* argv[]) {
-	OptInfo_T optInfo = { DEFAULT_MVSCMD, "", NULL, NULL, 0, 0 };
+	OptInfo_T optInfo = { DEFAULT_MVSCMD, "", NULL, 0, 0 };
 	ProgramInfo_T progInfo = { 0, 0, 0, 0, 0 };
 
-	ProgramFailure_T rc;
+	ProgramFailureMsg_T rc;
 	
 	rc = establishEnvironment();
 	if (rc != NoError) {
-		syntax(rc, &optInfo);
 		return 16;
 	}
 	
 	rc = processArgs(argc, argv, &optInfo);
 	if (rc == IssueHelp) {
-		printHelp();
+		printHelp(PROG_NAME);
 	}	
 	
 	if (rc != NoError) {
@@ -81,7 +81,6 @@ int main(int argc, char* argv[]) {
 	if (rc == NoError) {
 		return progInfo.rc;
 	} else {
-		syntax(rc, &optInfo);
 		return rc;
 	}	
 }

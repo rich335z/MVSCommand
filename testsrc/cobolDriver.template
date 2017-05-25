@@ -40,4 +40,4 @@ PDS Member allocation succeeded for SYSIN=@@HLQ@@.MVSCMD.COBOL(MAIN)
 PDS Member allocation succeeded for SYSLIN=@@HLQ@@.MVSCMD.COBOL.OBJ(COBOL)
 OS Load program IGYCRCTL
 Addressing mode: AMODE31
-Exit code: 0 from IGYCRCTL
+Attach Exit code: 0 from IGYCRCTL

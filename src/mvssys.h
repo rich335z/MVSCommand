@@ -25,6 +25,6 @@
 		int rc;
 	} ProgramInfo_T;
 	
-	ProgramFailure_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo);
-	ProgramFailure_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo);
+	ProgramFailureMsg_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo);
+	ProgramFailureMsg_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo);
 #endif

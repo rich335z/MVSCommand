@@ -8,4 +8,4 @@ PDS Member allocation succeeded for SYSIN=@@HLQ@@.MVSCMD.C(MAIN)
 PDS Member allocation succeeded for SYSLIN=@@HLQ@@.MVSCMD.C.OBJ(MAIN)
 OS Load program CCNDRVR 
 Addressing mode: AMODE31
-Exit code: 0 from CCNDRVR
+Attach Exit code: 0 from CCNDRVR
