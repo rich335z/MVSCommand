@@ -30,6 +30,8 @@
 	#define DISP_EXCL "excl"
 	#define DISP_OLD  "old"
 	
+	#define DATASET_PROBABLY_DOES_NOT_EXIST 0x1708
+	
 	struct DSNode;
 	typedef struct DSNode {
 		struct DSNode* next;

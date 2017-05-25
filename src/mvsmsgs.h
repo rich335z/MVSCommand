@@ -48,7 +48,12 @@
 		ErrorAllocatingPDSMember=29,
 		ErrorAllocatingDUMMY=30,
 		ErrorWaitingForPID=31,
-		ErrorChildCompletion=32
+		ErrorChildCompletion=32,
+		ErrorAllocatingNonExistantDataset=33,
+		ErrorCodesAllocatingDataset=34,
+		ErrorCallingUnauthorizedFromAuthorized=35,
+		ErrorCallingAuthorizedFromUnauthorized=36
+		
 	} ProgramFailureMsg_T;
 	
 	/*
@@ -104,6 +109,7 @@
 		InfoSyntax16=46,
 		InfoSyntax17=47,
 		InfoCheckOption=48,
+		InfoAPFAuthorization=49
 	} ProgramInfoMsg_T;
 	
 	void printHelp(const char* pgmName);

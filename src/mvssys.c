@@ -90,6 +90,7 @@ static int call24BitProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 #pragma map(ATTMVS, "ATTMVS")
 void ATTMVS(int* pgmNameLen, const char* pgmName, int* argsLen, const char* args, void** exitAddr, void** exitParm, int* retVal, int* retCode, int* reasonCode);
 
+
 static int call31BitOr64BitProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 	char pgmName[MAX_NAME_LEN+1];
 	int pgmNameLen;
@@ -175,7 +176,8 @@ ProgramFailureMsg_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 		}
 	}	
 	if (rc != NoError) {
-		printError(rc, optInfo->programName);
+		int isAPFAuth = isAPFAuthorized();
+		printError(rc, optInfo->programName, PROG_NAME(isAPFAuth), PROG_NAME(isAPFAuth));
 	}
 	return rc;			 
 }
@@ -183,6 +185,14 @@ ProgramFailureMsg_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 #pragma linkage(LOAD, OS)
 #pragma map(LOAD, "LOAD")
 int LOAD(const char* module, unsigned int* info, unsigned long long* fp);
+
+#pragma linkage(ISAPFAUT, OS)
+#pragma map(ISAPFAUT, "ISAPFAUT")
+int ISAPFAUT(void);
+
+int isAPFAuthorized() {
+	return ((ISAPFAUT() == 4) ? 0 : 1);
+}
 
 ProgramFailureMsg_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 	unsigned long long fp = 0xFFFFFFFFFFFFFFFFLL;
@@ -196,7 +206,28 @@ ProgramFailureMsg_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 	}
 	rc = LOAD(program, &info, &fp);
 	if (rc == 0) {
+		int isAPFAuth = isAPFAuthorized();
 		setprogInfo(optInfo, progInfo, fp, info);	
+#if 0		
+		if (optInfo->verbose) {
+			printInfo(InfoAPFAuthorization, isAPFAuth, progInfo->APFAuthorized);
+		}
+#endif
+		if (isAPFAuth) {
+			if (progInfo->APFAuthorized) {
+				; /* all good */
+			} else {
+				printError(ErrorCallingUnauthorizedFromAuthorized, optInfo->programName, PROG_NAME(1), PROG_NAME(0));
+				return ErrorCallingUnauthorizedFromAuthorized;
+			}
+		} else {
+			if (!progInfo->APFAuthorized) {
+				; /* all good */
+			} else {
+				printError(ErrorCallingAuthorizedFromUnauthorized, optInfo->programName, PROG_NAME(0), PROG_NAME(1));
+				return ErrorCallingAuthorizedFromUnauthorized;
+			}			
+		}
 		return NoError;
 	} else {
 		if (optInfo->verbose) {

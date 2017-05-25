@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
 	ProgramInfo_T progInfo = { 0, 0, 0, 0, 0 };
 
 	ProgramFailureMsg_T rc;
-	
+
 	rc = establishEnvironment();
 	if (rc != NoError) {
 		return 16;
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
 	
 	rc = processArgs(argc, argv, &optInfo);
 	if (rc == IssueHelp) {
-		printHelp(PROG_NAME);
+		printHelp(PROG_NAME(isAPFAuthorized()));
 	}	
 	
 	if (rc != NoError) {

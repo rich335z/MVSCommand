@@ -1,7 +1,7 @@
 + mvscmd --concat=UNKA:UNKB:UNKC 
-Error allocating DDName CONCAT to Dataset UNKA.
-Error allocating DDName ???????? to Dataset UNKB.
-Error allocating DDName ???????? to Dataset UNKC.
+Error allocating DDName CONCAT to (probably) non-existant dataset UNKA.
+Error allocating DDName ???????? to (probably) non-existant dataset UNKB.
+Error allocating DDName ???????? to (probably) non-existant dataset UNKC.
 + mvscmd --concat=UNKA: 
 No dataset name specified for DDName concat.
 + mvscmd --concat=:UNKA 

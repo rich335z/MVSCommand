@@ -39,34 +39,45 @@ static const char* prtStrPointer(const char* p) {
 	}
 }
 
-static void SteplibAllocationError(const char* steplib) {
+static void SteplibAllocationError(OptInfo_T* optInfo, const char* steplib) {
 	printError(ErrorAllocatingSTEPLIB, steplib);
 }
 
-static void ConsoleAllocationError(__dyn_t* ip) {
+static void ConsoleAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
 	char* ddName = ip->__ddname;
 	char* dsName = ip->__dsname;
 	printError(ErrorAllocatingCONSOLE, ddName, dsName);	
 }
 
-static void ConcatenationAllocationError(DDNameList_T* ddNameList, struct __S99struc* parmlist) {
+static void ConcatenationAllocationError(OptInfo_T* optInfo, DDNameList_T* ddNameList, struct __S99struc* parmlist) {
 	char* ddName = ddNameList->ddName;
 	printError(ErrorAllocatingConcatenation, ddName);	
 }
 
-static void DatasetAllocationError(__dyn_t* ip) {
+static void DatasetAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
 	char* ddName = ip->__ddname;
-	char* dsName = ip->__dsname;	
-	printError(ErrorAllocatingDataset, ddName, dsName);	 	
+	char* dsName = ip->__dsname;
+	/*
+	 * Error Codes:
+	 * https://www.ibm.com/support/knowledgecenter/SSLTBW_2.1.0/com.ibm.zos.v2r1.ieaa800/erc.htm
+	 */
+	if (optInfo->verbose) {
+		printError(ErrorCodesAllocatingDataset, ip->__errcode, ip->__infocode);
+	}
+	if (ip->__errcode == DATASET_PROBABLY_DOES_NOT_EXIST) {
+		printError(ErrorAllocatingNonExistantDataset, ddName, dsName);
+	} else {
+		printError(ErrorAllocatingDataset, ddName, dsName);	
+	}
 }
 
-static void PDSMemberAllocationError(__dyn_t* ip) {
+static void PDSMemberAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
 	char* ddName = ip->__ddname;
 	char* dsName = ip->__dsname;
 	char* memName= ip->__member;
 	printError(ErrorAllocatingPDSMember, ddName, dsName, memName);	}
 
-static void DummyAllocationError(__dyn_t* ip) {
+static void DummyAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
 	char* ddName = ip->__ddname;
 	printError(ErrorAllocatingDUMMY, ddName); 	
 }
@@ -372,7 +383,7 @@ static int allocPDSMember(OptInfo_T* optInfo, char* ddName, DSNode_T* dsNode) {
 	errno = 0;
 	rc = dynalloc(&ip); 
 	if (rc) {
-		PDSMemberAllocationError(&ip);
+		PDSMemberAllocationError(optInfo, &ip);
 	} else {
    		if (optInfo->verbose) {
    			printInfo(InfoPDSMemberAllocationSucceeded, ddName, dsNode->dsName, dsNode->memName);
@@ -399,7 +410,7 @@ static int allocDataset(OptInfo_T* optInfo, char* ddName, DSNode_T* dsNode) {
 	errno = 0;
 	rc = dynalloc(&ip); 
 	if (rc) {
-		DatasetAllocationError(&ip);
+		DatasetAllocationError(optInfo, &ip);
 	} else {
    		if (optInfo->verbose) {
    			printInfo(InfoDatasetAllocationSucceeded, ddName, dsNode->dsName);
@@ -449,7 +460,7 @@ static int allocConsole(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
 	errno = 0;
 	rc = dynalloc(&ip); 
 	if (rc) {
-		ConsoleAllocationError(&ip);
+		ConsoleAllocationError(optInfo, &ip);
 	} else {
    		if (optInfo->verbose) {
    			printInfo(InfoConsoleDatasetAllocationSucceeded, ddNameList->ddName);
@@ -558,7 +569,7 @@ static int allocConcatenationReadOnly(OptInfo_T* optInfo, DDNameList_T* ddNameLi
 	
 	rc = svc99(&parmlist);
 	if (rc) {
-		ConcatenationAllocationError(ddNameList, &parmlist);
+		ConcatenationAllocationError(optInfo, ddNameList, &parmlist);
 	}
 	return rc;
 }
@@ -575,7 +586,7 @@ static int allocDummy(OptInfo_T* optInfo, char* ddName) {
 	errno = 0;
 	rc = dynalloc(&ip); 
 	if (rc) {
-		DummyAllocationError(&ip);
+		DummyAllocationError(optInfo, &ip);
 	} else {
    		if (optInfo->verbose) {
    			printInfo(InfoDummyDatasetAllocationSucceeded, ddName);
@@ -618,7 +629,7 @@ static int allocSteplib(OptInfo_T* optInfo, DSNodeList_T* dsNodeList) {
 		cur = cur->next;
 	}
 	
-	SteplibAllocationError(steplib);
+	SteplibAllocationError(optInfo, steplib);
 	
 	free(steplib);
 	

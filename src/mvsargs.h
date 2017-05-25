@@ -18,7 +18,7 @@
 	#define PROGNAME_ARG (1)
 	#define FIRST_PROG_ARG (PROGNAME_ARG+1)
 	
-	#define PROG_NAME "mvscmd"
+	#define PROG_NAME(isAuth) ((isAuth) ? "mvscmdauth" : "mvscmd")
 	#define DEFAULT_MVSCMD "IEFBR14"
 	
 	#define LONG_OPT_PREFIX "--"

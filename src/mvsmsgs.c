@@ -38,8 +38,8 @@ static const char* ProgramFailureMessage[] = {
 	"Error printing dataset %s to console.\n",
 	"Error calling program %s.\n",
 	"Error deleting temporary dataset %s.\n",
-	"Error running 64 bit module %s with mvscmd (use mvscmd64).\n",
-	"Error running 31 bit module %s with mvscmd64 (use mvscmd).\n",	
+	"Unable to run 64 bit module %s with %s (use %s64).\n",
+	"Unable to run 31 bit module %s with %s64 (use %s).\n",	
 	"Error dubbing module %s as process.\n",
 	"Invalid dataset option %s specified.\n", 
 	"Error allocating STEPLIB %s.\n",
@@ -49,7 +49,12 @@ static const char* ProgramFailureMessage[] = {
 	"Error allocating DDName %s to PDS Member %s(%s).\n",
 	"Error allocating DDName %s to DUMMY.\n",
 	"Error waiting for PID %d to complete.\n",
-	"Child process did not complete correctly for %s.\n"
+	"Child process did not complete correctly for %s.\n",
+	"Error allocating DDName %s to (probably) non-existant dataset %s.\n", 
+	"Error Codes allocating dataset: error:0x%X info:0x%X.\n",
+	"Unable to call unauthorized program %s from %s. Use %s.\n",
+	"Unable to call authorized program %s from %s. Use %s.\n"
+	
 };
 
 static const char* ProgramInfoMessage[] = {
@@ -101,7 +106,8 @@ static const char* ProgramInfoMessage[] = {
 	" Note: DD-names and the keywords DUMMY, EXCL and OLD are case-insensitive. All other options are case-sensitive\n",
 	" Example: Compare 2 PDS members 'old' and 'new' and write the output to stdout\n",
 	"  mvscmd --pgm=isrsupc --args=\"DELTAL,LINECMP\" --newdd=ibmuser.in\\(new\\) --olddd=ibmuser.in\\(old\\) --sysin=ibmuser.cmd\\(superce\\) --outdd=*\n",
-	"Check option <%s>\n"
+	"Check option <%s>\n",
+	"APF Authorization Information. My APF authorization: %d. Program Authorization: %d\n",
 };
 
 

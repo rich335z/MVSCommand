@@ -26,5 +26,11 @@ Invalid dataset name () specified.
 Invalid dataset name A( specified.
 + mvscmd --sysout=A() 
 No Program name specified with program option.
-+ mvscmd --pgm=RDTD 
-Error running 64 bit module RDTD with mvscmd (use mvscmd64).
++ export STEPLIB=IBMUSER.RDT.LOAD:none 
++ mvscmdauth --pgm=RDTD 
+Unable to run 64 bit module RDTD with mvscmdauth (use mvscmdauth64).
++ export STEPLIB=IBMUSER.RDT.LOAD:none 
++ mvscmdauth -p=iebcopy 
+Unable to call unauthorized program iebcopy from mvscmdauth. Use mvscmd.
++ mvscmd -p=ikjeft01 
+Unable to call authorized program ikjeft01 from mvscmd. Use mvscmdauth.

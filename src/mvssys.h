@@ -27,4 +27,6 @@
 	
 	ProgramFailureMsg_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo);
 	ProgramFailureMsg_T callProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo);
+	
+	int isAPFAuthorized(void);
 #endif

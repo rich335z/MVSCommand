@@ -30,26 +30,31 @@ EPILOG  EDCEPIL
 *
 ERR_SVC DS 0F
         B  POSTLOAD
-*
-* CEEPLOD2 - load a program with CEE service
 *        
-CEEPLOD2 CSECT
-CEEPLOD2 AMODE 31
-CEEPLOD2 RMODE ANY
-CEEPLODP EDCPRLG
+ISAPFAUT CSECT
+ISAPFAUT AMODE 31
+ISAPFAUT RMODE ANY
+         EDCPRLG
 *
-         L   15,CEECAACELV-CEECAA(,12)
-         L   15,3948(,15)
-         BALR 14,15
-*        
-CEEPLODE EDCEPIL
+*   Issue TESTAUT to see if current task is running authorized
+*
+         TESTAUTH FCTN=1       see if running apf authorized
+*                              store in R15 (0 authorized, 4 not)
+*
+         EDCEPIL
+         DS    0D
+         LTORG       
+*
+*
 *
 SETDUBDF CSECT
 SETDUBDF AMODE 31
 SETDUBDF RMODE ANY
 SETDUBDP EDCPRLG
-         CALL BPX1SDD        
+         CALL BPX1SDD
 SETDUBDE EDCEPIL
+*
+*
 *
 ATTMVS   CSECT
 ATTMVS   AMODE 31
