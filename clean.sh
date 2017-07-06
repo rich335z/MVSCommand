@@ -5,3 +5,6 @@ rm -f bin/mvscmdauth
 rm -f tests/*.expected
 rm -f tests/*.actual
 rm -f testsrc/*.cmd
+rm -f opttests/*.expected
+rm -f opttests/*.actual
+rm -f opttestsrc/*.cmd

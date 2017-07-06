@@ -1,0 +1,4 @@
+ DSN SYSTEM(@@DB2SSID@@)                                                       
+ RUN  PROGRAM(DB2PHOTO) PLAN(SAMPLE) +                                  
+      LIB('@@HLQ@@.MVSCMD.@@DB2SSID@@.LOAD') +                                      
+      PARMS('/') 

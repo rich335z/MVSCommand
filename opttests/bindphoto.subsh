@@ -1,0 +1,5 @@
+#
+# Program binds COBOL DB2 program using HEWL
+#
+
+mvscmd --pgm="HEWL" --args="MAP" --syslin=${TESTHLQ}.mvscmd.${DB2SSID}.obj\(db2photo\) --syslmod=${TESTHLQ}.mvscmd.${DB2SSID}.load\(db2photo\) --sysprint=dummy --syslib=${LEHLQ}.SCEELKED:${LEHLQ}.SCEELKEX:${DB2HLQ}.SDSNLOAD 

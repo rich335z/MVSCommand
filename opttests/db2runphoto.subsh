@@ -1,0 +1,6 @@
+#
+# Run the DB2 COBOL program
+#
+(export STEPLIB=${DB2HLQ}.SDSNLOAD; \
+ mvscmdauth --pgm=IKJEFT01 --sysprint=* --systsprt=* --sysout=* --systsin="${TESTHLQ}.mvscmd.${DB2SSID}.cmd(RUNPHOTO)"
+)

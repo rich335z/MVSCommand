@@ -1,0 +1,19 @@
+#
+# Run DB2 precompiler on DB2 photo app, creating a DBRMLIB member and precompiled COBOL output member
+#
+#set -x
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.DB2PC.PHOTO.SYSUT1'"\) dsorg\(ps\) catalog tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.DB2PC.PHOTO.SYSUT2'"\) dsorg\(ps\) catalog tracks space\(100,10\) >/dev/null 2>&1
+
+(
+ export STEPLIB=${DB2HLQ}.${DB2SSID}.SDSNEXIT:${DB2HLQ}.SDSNLOAD:$STEPLIB; 
+ mvscmd --pgm=DSNHPC --args="HOST(IBMCOB),APOST,APOSTSQL,SOURCE,STDSQL(YES),NOXREF,SQL(DB2),DEC(31)" \
+  --sysin="${TESTHLQ}.MVSCMD.${DB2SSID}.COBOL(DB2PHOTO)"  \
+  --sysprint=dummy --systerm=* --sysudump=dummy \
+  --sysut1="${TESTHLQ}.MVSCMD.${DB2SSID}.DB2PC.PHOTO.SYSUT1" --sysut2="${TESTHLQ}.MVSCMD.${DB2SSID}.DB2PC.PHOTO.SYSUT2" \
+  --syscin="${TESTHLQ}.MVSCMD.${DB2SSID}.DB2PCGEN.COBOL(DB2PHOTO)" \
+  --dbrmlib="${TESTHLQ}.MVSCMD.${DB2SSID}.DBRMLIB.DATA(DB2PHOTO)"
+)
+
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.DB2PC.PHOTO.SYSUT1'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.DB2PC.PHOTO.SYSUT2'") >/dev/null 2>&1

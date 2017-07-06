@@ -1,0 +1,8 @@
+ ALLOC FI(DBRMLIB) DA('@@HLQ@@.MVSCMD.@@DB2SSID@@.DBRMLIB.DATA')
+ DSN SYSTEM(@@DB2SSID@@)                                                       
+ BIND PACKAGE (SAMPLE) MEMBER(DB2PHOTO) +                               
+      CURRENTDATA(NO) ACT(REP) ISO(CS) ENCODING(EBCDIC)                 
+ BIND PLAN(SAMPLE)  PKLIST(*.SAMPLE.*) +                                
+      ACTION(REPLACE) RETAIN +                                          
+      CURRENTDATA(NO) ISO(CS) ENCODING(EBCDIC) SQLRULES(DB2)            
+ END

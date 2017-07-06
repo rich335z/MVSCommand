@@ -1,0 +1,8 @@
+#
+# Program performs a DB2 bind of COBOL DB2 program using batch TSO BIND command
+#
+
+(export STEPLIB=${DB2HLQ}.SDSNLOAD; mvscmdauth  --pgm=ikjeft01 \
+  --systsin=${TESTHLQ}.MVSCMD.${DB2SSID}.CMD\(BNDPHOTO\) \
+  --sysprint=* --systsprt=* --sysudump=dummy
+)

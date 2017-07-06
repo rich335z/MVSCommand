@@ -1,0 +1,63 @@
+#
+# Runs the COBOL compiler on the db2 photo program previously compiled by db2pcphoto.sh
+# Unfortunately, the COBOL compiler needs a whole bunch of 
+# work datasets in order to operate. 
+#
+
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT1'"\) dsorg\(ps\) catalog tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT2'"\) dsorg\(ps\) catalog tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT3'"\) dsorg\(ps\) catalog tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT4'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT5'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT6'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT7'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT8'"\) dsorg\(ps\) catalog  tracks space\(100,10\)	>/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT9'"\) dsorg\(ps\) catalog  tracks space\(100,10\)	>/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT10'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1	
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT11'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT12'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT13'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT14'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT15'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSMDECK'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
+
+(export STEPLIB=${COBOLHLQ}.V5R2M0:${LEHLQ}.SCEERUN:${LEHLQ}.SCEERUN2:$STEPLIB; \
+ mvscmd --pgm="IGYCRCTL" --args="NONAME,NOTERM,NOLIST,NOSOURCE,NOXREF" \
+  --syslin=${TESTHLQ}.mvscmd.${DB2SSID}.obj\(db2photo\) \
+  --sysin=${TESTHLQ}.mvscmd.${DB2SSID}.db2pcgen.cobol\(db2photo\) \
+  --sysprint=dummy \
+  --sysmdeck=${TESTHLQ}.mvscmd.${DB2SSID}.sysmdeck \
+  --sysut1=${TESTHLQ}.mvscmd.${DB2SSID}.sysut1 \
+  --sysut2=${TESTHLQ}.mvscmd.${DB2SSID}.sysut2 \
+  --sysut3=${TESTHLQ}.mvscmd.${DB2SSID}.sysut3 \
+  --sysut4=${TESTHLQ}.mvscmd.${DB2SSID}.sysut4 \
+  --sysut5=${TESTHLQ}.mvscmd.${DB2SSID}.sysut5 \
+  --sysut6=${TESTHLQ}.mvscmd.${DB2SSID}.sysut6 \
+  --sysut7=${TESTHLQ}.mvscmd.${DB2SSID}.sysut7 \
+  --sysut8=${TESTHLQ}.mvscmd.${DB2SSID}.sysut8 \
+  --sysut9=${TESTHLQ}.mvscmd.${DB2SSID}.sysut9 \
+  --sysut10=${TESTHLQ}.mvscmd.${DB2SSID}.sysut10 \
+  --sysut11=${TESTHLQ}.mvscmd.${DB2SSID}.sysut11 \
+  --sysut12=${TESTHLQ}.mvscmd.${DB2SSID}.sysut12 \
+  --sysut13=${TESTHLQ}.mvscmd.${DB2SSID}.sysut13 \
+  --sysut14=${TESTHLQ}.mvscmd.${DB2SSID}.sysut14 \
+  --sysut15=${TESTHLQ}.mvscmd.${DB2SSID}.sysut15\
+)
+
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT1'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT2'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT3'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT4'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT5'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT6'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT7'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT8'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT9'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT10'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT11'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT12'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT13'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT14'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSUT15'") >/dev/null 2>&1
+(tsocmd delete "'"${TESTHLQ}".MVSCMD.${DB2SSID}.SYSMDECK'") >/dev/null 2>&1
+
