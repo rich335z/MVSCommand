@@ -18,7 +18,7 @@ mvscmd --sysout=\(\)
 mvscmd --sysout=A\(
 mvscmd --sysout=A\(\)
 
-(export STEPLIB=${AUTHHLQ}.${AUTHSFX}:$STEPLIB; mvscmdauth --pgm=RDTD) # 64-bit program from 31-bit mvscmdauth
+(mvscmdauth --pgm=RDTD) # 64-bit program from 31-bit mvscmdauth
 
-(export STEPLIB=${AUTHHLQ}.${AUTHSFX}:$STEPLIB; mvscmdauth -p=iebcopy) # un-authorized from authorized
+(mvscmdauth -p=iebcopy) # un-authorized from authorized
 (mvscmd -p=ikjeft01) # authorized from unauthorized

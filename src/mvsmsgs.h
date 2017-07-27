@@ -52,8 +52,9 @@
 		ErrorAllocatingNonExistantDataset=33,
 		ErrorCodesAllocatingDataset=34,
 		ErrorCallingUnauthorizedFromAuthorized=35,
-		ErrorCallingAuthorizedFromUnauthorized=36
-		
+		ErrorCallingAuthorizedFromUnauthorized=36,
+		ErrorUnableToReadHFSFile=37,
+		ErrorHFSFileTooLong=38
 	} ProgramFailureMsg_T;
 	
 	/*

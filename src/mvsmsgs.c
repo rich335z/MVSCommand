@@ -53,8 +53,9 @@ static const char* ProgramFailureMessage[] = {
 	"Error allocating DDName %s to (probably) non-existant dataset %s.\n", 
 	"Error Codes allocating dataset: error:0x%X info:0x%X.\n",
 	"Unable to call unauthorized program %s from %s. Use %s.\n",
-	"Unable to call authorized program %s from %s. Use %s.\n"
-	
+	"Unable to call authorized program %s from %s. Use %s.\n",
+	"HFS file %s can not be read.\n",
+	"HFS file %.*s too long.\n"
 };
 
 static const char* ProgramInfoMessage[] = {
