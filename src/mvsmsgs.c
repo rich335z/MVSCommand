@@ -37,7 +37,7 @@ static const char* ProgramFailureMessage[] = {
 	"Unable to allocate all DDNames.\n",
 	"Error printing dataset %s to console.\n",
 	"Error calling program %s.\n",
-	"Error deleting temporary dataset %s.\n",
+	"Error deleting temporary dataset %s=%s.\n",
 	"Unable to run 64 bit module %s with %s (use %s64).\n",
 	"Unable to run 31 bit module %s with %s64 (use %s).\n",	
 	"Error dubbing module %s as process.\n",
@@ -55,7 +55,9 @@ static const char* ProgramFailureMessage[] = {
 	"Unable to call unauthorized program %s from %s. Use %s.\n",
 	"Unable to call authorized program %s from %s. Use %s.\n",
 	"HFS file %s can not be read.\n",
-	"HFS file %.*s too long.\n"
+	"HFS file %.*s too long.\n",
+	"Error reading from stdin to %s.\n",	
+	"Error writing record %d to stdin temporary dataset %s.\n"
 };
 
 static const char* ProgramInfoMessage[] = {
@@ -78,7 +80,7 @@ static const char* ProgramInfoMessage[] = {
 	",excl",
 	":",
 	"\n",
-	"Temporary Dataset %s retained for debug\n",
+	"Temporary Dataset %s=%s retained for debug\n",
 	"Program is APF authorized\n",
 	"Addressing mode: %s\n",
 	"Program is multi-segment program object or very large. Size unknown\n",
@@ -102,13 +104,18 @@ static const char* ProgramInfoMessage[] = {
 	"  Dataset example: --sysin=IBMUSER.TEST.OBJ: allocate the DDName SYSIN to the dataset IBMUSER.TEST.OBJ\n",
 	"  Concatenated dataset example: --syslib=CEE.SCEELKED:CEE.SCEELKEX: allocate the ddname SYSLIB to the dataset concatenation CEE.SCEELKED:CEE.SCEELKEX\n",
 	"  Console example: --sysprint=*: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).\n",
+	"  Console example (alternate): --sysprint=stdout: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).\n",	
+	"  stdin example: --sysin=stdin: allocate the DDName SYSIN to an FB 80 temporary sequential dataset that has stdin written to it (stdin can be piped in from other processes).\n",	
 	"  Dummy Dataset example: --sysin=dummy: allocate the DDName SYSIN to DUMMY\n",
 	"  Dataset allocated as 'exclusive' (i.e. DISP=OLD) example: --archive=IBMUSER.MVSCMD.DAR,EXCL\n",
 	" Note: DD-names and the keywords DUMMY, EXCL and OLD are case-insensitive. All other options are case-sensitive\n",
 	" Example: Compare 2 PDS members 'old' and 'new' and write the output to stdout\n",
-	"  mvscmd --pgm=isrsupc --args=\"DELTAL,LINECMP\" --newdd=ibmuser.in\\(new\\) --olddd=ibmuser.in\\(old\\) --sysin=ibmuser.cmd\\(superce\\) --outdd=*\n",
+	"  echo \"   CMPCOLM 1:72\" | mvscmd --pgm=isrsupc --args=\"DELTAL,LINECMP\" --newdd=ibmuser.in\\(new\\) --olddd=ibmuser.in\\(old\\) --sysin=stdin --outdd=stdout\n",
 	"Check option <%s>\n",
 	"APF Authorization Information. My APF authorization: %d. Program Authorization: %d\n",
+	"Dynamic allocation succeeded for %s (temporary dataset for stdin)\n",
+	"  %s=stdin\n",
+	"Record %d read from stdin is more than 80 bytes. Record truncated\n",
 };
 
 
@@ -144,4 +151,6 @@ void printHelp(const char* progName) {
 	printInfo(InfoSyntax15);
 	printInfo(InfoSyntax16);
 	printInfo(InfoSyntax17);	
+	printInfo(InfoSyntax18);	
+	printInfo(InfoSyntax19);		
 }	

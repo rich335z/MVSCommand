@@ -29,7 +29,9 @@
 	
 	#define STEPLIB_DDNAME "STEPLIB"
 	#define DUMMY_NAME "DUMMY"
-	#define CONSOLE_NAME "*"	
+	#define CONSOLE_NAME "*"
+	#define ALT_CONSOLE_NAME "stdout"
+	#define STDIN_NAME "stdin"
 	#define DISP_EXCL "excl"
 	#define DISP_OLD  "old"
 	
@@ -87,6 +89,7 @@
 		FileNodeList_T fileNodeList;
 		char ddName[MAX_DDNAME_LEN+1];
 		int isHFS:1;
+		int isStdin:1;		
 		int isConsole:1;
 		int isDummy:1;	
 		int isConcatenation:1;

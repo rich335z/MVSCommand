@@ -49,6 +49,12 @@ static void ConsoleAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
 	printError(ErrorAllocatingCONSOLE, ddName, dsName);	
 }
 
+static void StdinAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
+	char* ddName = ip->__ddname;
+	char* dsName = ip->__dsname;
+	printError(ErrorAllocatingSTDIN, ddName, dsName);	
+}
+
 static void ConcatenationAllocationError(OptInfo_T* optInfo, DDNameList_T* ddNameList, struct __S99struc* parmlist) {
 	char* ddName = ddNameList->ddName;
 	printError(ErrorAllocatingConcatenation, ddName);	
@@ -137,6 +143,13 @@ static ProgramFailureMsg_T allocConsoleNode(FileNodeList_T* fileNodeList) {
 	return allocDSNode(fileNodeList, 0);
 }
 
+static ProgramFailureMsg_T allocStdinNode(FileNodeList_T* fileNodeList) {
+/*
+ * stdin requires space to hold a temporary sequential dataset name that is used for the
+ * backing file of the input stream - so it is equivalent to a dataset node
+ */
+	return allocDSNode(fileNodeList, 0);
+}
 
 static ProgramFailureMsg_T allocDummyNode(FileNodeList_T* fileNodeList) {
 	return allocFileNode(fileNodeList, sizeof(FileNode_T*));
@@ -410,13 +423,20 @@ ProgramFailureMsg_T addDDName(const char* option, OptInfo_T* optInfo) {
 	}
 	uppercase(entry->ddName);
 	
-	if (!strcmp(&option[assignPos+1], CONSOLE_NAME)) {
+	if (!strcmp(&option[assignPos+1], CONSOLE_NAME) || !strcmp(&option[assignPos+1], ALT_CONSOLE_NAME)) {
 		rc = allocConsoleNode(&entry->fileNodeList);
 		if (rc == NoError) {
 			entry->isConsole = 1;
 		}
 		return rc;
 	}
+	if (!strcmp(&option[assignPos+1], STDIN_NAME)) {
+		rc = allocStdinNode(&entry->fileNodeList);
+		if (rc == NoError) {
+			entry->isStdin = 1;
+		}
+		return rc;
+	}	
 	if (!strnocasecmp(&option[assignPos+1], DUMMY_NAME)) {
 		rc = allocDummyNode(&entry->fileNodeList);
 		if (rc == NoError) {
@@ -520,7 +540,6 @@ static char* temporaryMVSSequentialDataset(char* buffer) {
 	
 	return buffer;
 }	
-
 	
 static int allocConsole(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
 	__dyn_t ip;
@@ -556,6 +575,40 @@ static int allocConsole(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
 	return rc;
 }
 
+static int allocStdin(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
+	__dyn_t ip;
+	int rc;
+
+	FileNode_T* fileNode = ddNameList->fileNodeList.head;
+	temporaryMVSSequentialDataset(fileNode->node.ds.dsName);
+	if (fileNode->node.ds.dsName == NULL) {
+		return -1;
+	}
+	dyninit(&ip);
+
+	ip.__ddname = ddNameList->ddName; 
+	ip.__dsname = fileNode->node.ds.dsName;
+	ip.__dsorg  = __DSORG_PS;
+	ip.__normdisp = __DISP_CATLG;
+	ip.__lrecl  = 80;
+	ip.__recfm  = _FB_;
+	ip.__status = __DISP_NEW; 
+	ip.__alcunit = __TRK;
+	ip.__primary = 100;
+	ip.__secondary = 100;
+
+	errno = 0;
+	rc = dynalloc(&ip); 
+	if (rc) {
+		StdinAllocationError(optInfo, &ip);
+	} else {
+   		if (optInfo->verbose) {
+   			printInfo(InfoStdinDatasetAllocationSucceeded, ddNameList->ddName);
+   		}
+   	}
+	return rc;
+}
+
 /*
  * Convert a datasetname from HLQ.MLQ.....LLQ to:
  * //'HLQ.MLQ....LLQ'
@@ -567,6 +620,58 @@ static char* CIODatasetName(const char* fullyQualifiedDataset, char* buffer) {
 	memcpy(&buffer[3+len], "'", 2);
 
 	return buffer;
+}
+
+static ProgramFailureMsg_T writeStdinToDataset(OptInfo_T* optInfo, char* dataset) {
+	char posixName[MAX_DATASET_LEN+5];
+	FILE* fp = fopen(CIODatasetName(dataset, posixName), "wb,type=record,lrecl=80,recfm=fb");
+	char line[80] = "";
+	size_t numElements = 1;
+	size_t size = 80;
+	int readCount=0;
+	int c;
+	int rc;
+	int recNum=1;
+	ProgramFailureMsg_T err = NoError;
+
+	/*
+	 * Outer loop: loop over records, writing each record (blank padded) to the dataset
+	 * Inner loop: read up to 'size' characters, then throw the rest away until a newline
+	 */
+	do {
+		do {
+			c = getchar();
+			if (c != EOF && c != '\n') {
+				line[readCount++] = (char) c;
+			}
+		} while (readCount < size && c != EOF && c != '\n'); 
+		if (readCount == size) {
+			printInfo(InfoStdinRecordTooLong, recNum);
+			while (c != EOF && c != '\n') {
+				c = getchar(); 
+			}
+		}
+		if (readCount > 0) {
+			if (readCount < size) {
+				memset(&line[readCount], ' ', size-readCount);
+			}
+			rc = fwrite(line, numElements, size, fp);
+			if (rc != size) {
+				printError(ErrorStdinWriteFailed, recNum, dataset);
+				err = ErrorStdinWriteFailed;
+				break;
+			}
+		}
+		readCount=0;
+		++recNum;
+	} while (c != EOF);
+	rc = fclose(fp);
+	if (rc) {
+		printError(ErrorStdinWriteFailed, recNum, dataset);
+		err = ErrorStdinWriteFailed;
+	}
+
+	return err;
 }
 
 static int printDatasetToConsole(char* dataset) {
@@ -749,6 +854,8 @@ static void printDDNames(DDNameList_T* ddNameList) {
 	while (ddNameList != NULL) {
 		if (ddNameList->isConsole) {
 			printInfo(InfoConsoleDDName, ddNameList->ddName);	
+		} else if (ddNameList->isStdin) {
+			printInfo(InfoStdinDDName, ddNameList->ddName);				
 		} else if (ddNameList->isDummy) {
 			printInfo(InfoDummyDDName, ddNameList->ddName);				
 		} else {
@@ -789,20 +896,25 @@ ProgramFailureMsg_T establishDDNames(OptInfo_T* optInfo) {
 	while (ddNameList != NULL) {
 		if (ddNameList->isConsole) {
 			rc = allocConsole(optInfo, ddNameList);
+		} else if (ddNameList->isStdin) {
+			rc = allocStdin(optInfo, ddNameList);
+			if (rc == 0) {
+				rc = writeStdinToDataset(optInfo, ddNameList->fileNodeList.head->node.ds.dsName);
+			}
 		} else if (ddNameList->isDummy) {
 			rc = allocDummy(optInfo, ddNameList->ddName);
+		} else if (!strcmp(ddNameList->ddName, STEPLIB_DDNAME)) {
+			rc = allocSteplib(optInfo, &ddNameList->fileNodeList);
+		} else if (ddNameList->isHFS) {
+			printf("DDName:%s is an HFS ddname\n", ddNameList->ddName);
+		} else if (ddNameList->isConcatenation) {
+			rc = allocConcatenationReadOnly(optInfo, ddNameList);
 		} else {
-			if (!strcmp(ddNameList->ddName, STEPLIB_DDNAME)) {
-				rc = allocSteplib(optInfo, &ddNameList->fileNodeList);
-			} else if (ddNameList->fileNodeList.head->next == NULL) {
-				if (hasMemberName(ddNameList->fileNodeList.head)) {
-					rc = allocPDSMember(optInfo, ddNameList->ddName, ddNameList->fileNodeList.head, ddNameList->isExclusive);
-				} else {
-					rc = allocDataset(optInfo, ddNameList->ddName, ddNameList->fileNodeList.head, ddNameList->isExclusive);
-				}	
+			if (hasMemberName(ddNameList->fileNodeList.head)) {
+				rc = allocPDSMember(optInfo, ddNameList->ddName, ddNameList->fileNodeList.head, ddNameList->isExclusive);
 			} else {
-				rc = allocConcatenationReadOnly(optInfo, ddNameList);
-			}
+				rc = allocDataset(optInfo, ddNameList->ddName, ddNameList->fileNodeList.head, ddNameList->isExclusive);
+			}	
 		}
 		if (rc > maxRC) {
 			maxRC = rc;
@@ -832,21 +944,23 @@ ProgramFailureMsg_T printToConsole(OptInfo_T* optInfo) {
 }
 
 ProgramFailureMsg_T removeConsoleFiles(OptInfo_T* optInfo) {
+	ProgramFailureMsg_T rc = NoError;
 	char posixName[MAX_DATASET_LEN+5];
+	
 	DDNameList_T* ddNameList = optInfo->ddNameList;
 	while (ddNameList != NULL) {
-		if (ddNameList->isConsole) {
+		if (ddNameList->isConsole || ddNameList->isStdin) {
 			CIODatasetName(ddNameList->fileNodeList.head->node.ds.dsName, posixName);
 			if (optInfo->debug) {
-				printInfo(InfoTemporaryDatasetRetained, ddNameList->fileNodeList.head->node.ds.dsName);
+				printInfo(InfoTemporaryDatasetRetained, ddNameList->ddName, ddNameList->fileNodeList.head->node.ds.dsName);
 			} else {
 				if (remove(posixName)) {
-					printError(ErrorDeletingTemporaryDataset, ddNameList->fileNodeList.head->node.ds.dsName); 
-					return ErrorDeletingTemporaryDataset;
+					printError(ErrorDeletingTemporaryDataset, ddNameList->ddName, ddNameList->fileNodeList.head->node.ds.dsName); 
+					rc = ErrorDeletingTemporaryDataset;
 				}
 			}
 		}
 		ddNameList = ddNameList->next;
 	}
-	return NoError;
+	return rc;
 }

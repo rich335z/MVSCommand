@@ -54,7 +54,9 @@
 		ErrorCallingUnauthorizedFromAuthorized=35,
 		ErrorCallingAuthorizedFromUnauthorized=36,
 		ErrorUnableToReadHFSFile=37,
-		ErrorHFSFileTooLong=38
+		ErrorHFSFileTooLong=38,
+		ErrorAllocatingSTDIN=39,
+		ErrorStdinWriteFailed=40,
 	} ProgramFailureMsg_T;
 	
 	/*
@@ -109,8 +111,13 @@
 		InfoSyntax15=45,
 		InfoSyntax16=46,
 		InfoSyntax17=47,
-		InfoCheckOption=48,
-		InfoAPFAuthorization=49
+		InfoSyntax18=48,
+		InfoSyntax19=49,
+		InfoCheckOption=50,
+		InfoAPFAuthorization=51,
+		InfoStdinDatasetAllocationSucceeded=52,
+		InfoStdinDDName=53,	
+		InfoStdinRecordTooLong=54,
 	} ProgramInfoMsg_T;
 	
 	void printHelp(const char* pgmName);
