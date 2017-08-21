@@ -10,7 +10,7 @@ mvscmd --pgm=iebcopy --sysprint=* --sysin=dummy --sysut1=ibmuser.test.c --sysut2
 
 Here is a short script I called `dgrep` to illustrate the value of **mvscmd** a bit better:
 
-** dgrep:**
+** dgrep: **
 ```
 str=$1
 datasetpattern=$2
