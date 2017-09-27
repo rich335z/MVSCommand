@@ -95,6 +95,9 @@ static ProgramFailureMsg_T allocDDNode(DDNameList_T** ddNameList) {
 	}
 
 	newDDNode->next = *ddNameList;
+	newDDNode->fileNodeList.head = NULL;
+	newDDNode->fileNodeList.tail = NULL;
+	
 	*ddNameList = newDDNode;
 	
 	return NoError;
@@ -110,10 +113,10 @@ static ProgramFailureMsg_T allocFileNode(FileNodeList_T* fileNodeList, size_t si
 	if (newNode == NULL) {
 		return InternalOutOfMemory;
 	}
+	newNode->next = NULL;
 	if (fileNodeList->head == NULL) {
 		fileNodeList->head = newNode;
 		fileNodeList->tail = newNode;
-		newNode->next = NULL;
 	} else {
 		fileNodeList->tail->next = newNode;
 		fileNodeList->tail = newNode;
@@ -123,7 +126,6 @@ static ProgramFailureMsg_T allocFileNode(FileNodeList_T* fileNodeList, size_t si
 }
 
 static ProgramFailureMsg_T allocDSNode(FileNodeList_T* fileNodeList, int isConcatenation) {
-	FileNode_T* newNode;
 	if (isConcatenation) {
 		return allocFileNode(fileNodeList, sizeof(DSConcatenationNode_T)+sizeof(FileNode_T*));
 	} else {

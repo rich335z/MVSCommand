@@ -1,5 +1,6 @@
 rm -f bin/*.o
 rm -f bin/*.lst
+rm -f bin/*.dbg
 rm -f bin/mvscmd
 rm -f bin/mvscmdauth
 rm -f tests/*.expected

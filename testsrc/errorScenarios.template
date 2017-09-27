@@ -1,34 +1,17 @@
-+ mvscmd --pgm=Greater#8 
 Name Greater#8 is more than 8 characters long.
-+ mvscmd --pgm=Prog --args=parameter that is more than 256 characters....................................................................................................................................................................................................................... 
 Program arguments more than 100 characters.
-+ mvscmd --pgm=~xx 
 Name ~xx contains invalid characters.
-+ mvscmd --pgm=1xx 
 Name 1xx contains invalid characters.
-+ mvscmd --pgm=x~x 
 Name x~x contains invalid characters.
-+ mvscmd --pgm=xx& 
 Name xx& contains invalid characters.
-+ mvscmd --sysout= 
 No dataset name specified for DDName sysout.
-+ mvscmd --sysout=IS#MORE.THAN44.CHARACTR.DATASET.LONGNAME.HERE(MEMBER) 
 Dataset name IS#MORE.THAN44.CHARACTR.DATASET.LONGNAME.HERE is more than 44 characters long.
-+ mvscmd --sysout=. 
 Invalid dataset name . specified.
-+ mvscmd --sysout=TOOLONGQUALIFIER.SRC 
 Name TOOLONGQUALIFIER is more than 8 characters long.
-+ mvscmd --sysout=DATASET(MEMTOOBIG) 
 Name MEMTOOBIG is more than 8 characters long.
-+ mvscmd --sysout=() 
 Invalid dataset name () specified.
-+ mvscmd --sysout=A( 
 Invalid dataset name A( specified.
-+ mvscmd --sysout=A() 
 No Program name specified with program option.
-+ mvscmdauth --pgm=RDTD 
 Unable to run 64 bit module RDTD with mvscmdauth (use mvscmdauth64).
-+ mvscmdauth -p=iebcopy 
 Unable to call unauthorized program iebcopy from mvscmdauth. Use mvscmd.
-+ mvscmd -p=ikjeft01 
 Unable to call authorized program ikjeft01 from mvscmd. Use mvscmdauth.

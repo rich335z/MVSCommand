@@ -8,44 +8,6 @@ Here is an example of **mvscmd** being used to copy dataset IBMUSER.TEST.C to IB
 
 mvscmd --pgm=iebcopy --sysprint=* --sysin=dummy --sysut1=ibmuser.test.c --sysut2=ibmuser.test.copy
 
-Here is a short script I called `dgrep` to illustrate the value of **mvscmd** a bit better:
-
-**dgrep:**
-```
-str=$1
-datasetpattern=$2
-datasets=`echo " LISTCAT -\n ENTRIES("${datasetpattern}")\n" | mvscmdauth --pgm=idcams --sysprint=* --sysin=stdin | awk '/0NONVSAM/ { print $3 }' `
-for dataset in ${datasets}; do
-	echo "SRCHFOR '"${str}"'\n" | mvscmd --pgm=isrsupc --args='SRCHCMP,ANYC,IDPRFX,NOSUMS,LONGLN,NOPRTCC' --newdd=${dataset} --outdd=* --sysin=stdin | awk '!/  ISRSUPC/'
-done
-```
-
-**Sample Invocation:**
-```
-dgrep SYSIN “IBMUSER.DB2ADMIN.*”
-```
-
-**Sample Output:**
-```
- LINE-#  SOURCE SECTION                    SRCH DSN: IBMUSER.DB2ADMIN.JCL
- BINDTEP2                    --------- STRING(S) FOUND -------------------
-     24  //SYSIN    DD *                                                         00650000
- BLDTEP2                     --------- STRING(S) FOUND -------------------
-     42  //PPLI.SYSIN   DD DISP=SHR,
- CRTPHOTO                    --------- STRING(S) FOUND -------------------
-     22  //SYSIN    DD  *
- CRTTBL                      --------- STRING(S) FOUND -------------------
-      7  //SYSIN   DD DSN=IBMUSER.DB2ADMIN.SYSIN(CRTTBL),DISP=SHR
- LINE-#  SOURCE SECTION                    SRCH DSN: IBMUSER.DB2ADMIN.PLI
- DSNTEP2                     --------- STRING(S) FOUND -------------------
-    214    *      Get input from SYSIN.  Write results to SYSPRINT.           *  02140000
-    397    *      THE FOLLOWING ARE CONSIDERED VALID INPUT TO SYSIN:          *  03950000
- LINE-#  SOURCE SECTION                    SRCH DSN: IBMUSER.DB2ADMIN.PROC
- DSNHICOB                    --------- STRING(S) FOUND -------------------
-     10  //SYSIN    DD  DISP=SHR,DSN=&INDSN(&MEM)
- DSNHPLI                     --------- STRING(S) FOUND -------------------
-     27  //SYSIN    DD  DSN=&&DSNHIN,DISP=(OLD,DELETE)
-```
 ## Motivation
 
 I am not a big fan of JCL, even though I have worked on z/OS forever. 

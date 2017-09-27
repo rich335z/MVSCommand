@@ -41,10 +41,12 @@
 		char dsName[MAX_DATASET_LEN+1]; 
 		char memName[MAX_MEMBER_LEN+1];
 	} DSNode_T;
+	
 	typedef _Packed struct DSConcatenationNode {
 		DSNode_T ds;
 		char tempDDName[MAX_NAME_LEN+1];
 	} DSConcatenationNode_T;
+	
 	typedef _Packed struct HFSNode {
 		char fileName[FILENAME_MAX+1]; 
 	} HFSNode_T;
@@ -52,7 +54,7 @@
 	struct FileNode;
 	typedef _Packed struct FileNode {
 		_Packed struct FileNode* next;
-		union {
+		_Packed union {
 			DSNode_T ds;
 			DSConcatenationNode_T dsc;
 			HFSNode_T hfs;

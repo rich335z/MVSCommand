@@ -8,8 +8,9 @@
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.ADRDSU.DARV1'"\) recfm\(u\) lrecl\(0\) blksize\(32760\) dsorg\(ps\) dsntype\(basic\) catalog tracks space\(1000,1000\) >/dev/null 2>&1
 
 (
-# export STEPLIB=${AUTHHLQ}.${AUTHSFX}:$STEPLIB; 
+ . setcc adrdsuCreateViaDataset;
  mvscmdauth -v --pgm=ADRDSSU --archive=${TESTHLQ}.mvscmd.adrdsu.dar,old --sysin=${TESTHLQ}.mvscmd.adrdsu.cmd --sysprint=* | awk '!/1PAGE 0001|ADR109I|ADR006I|ADR801I|ADR006I|ADR013I|ADR012I/'
+ . unsetcc
 
 )
 
@@ -17,8 +18,12 @@ tso alloc dsn\("'"${TESTHLQ}".MVSCMD.ADRDSU.DARV1'"\) recfm\(u\) lrecl\(0\) blks
 
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.ADRDSU.DARV2'"\) recfm\(u\) lrecl\(0\) blksize\(32760\) dsorg\(ps\) dsntype\(basic\) catalog tracks space\(1000,1000\) >/dev/null 2>&1
 
-echo " DUMP OUTDD(ARCHIVE) -\n    DS(INCL(${TESTHLQ}.MVSCMD.IEBCOPY.**))" | 
-  mvscmdauth --pgm=ADRDSSU --archive=${TESTHLQ}.mvscmd.adrdsu.dar,old --sysin=stdin --sysprint=stdout |
-  awk '!/1PAGE 0001|ADR109I|ADR006I|ADR801I|ADR006I|ADR013I|ADR012I/'
+(
+  . setcc adrdsuCreateViaStdin;
+  echo " DUMP OUTDD(ARCHIVE) -\n    DS(INCL(${TESTHLQ}.MVSCMD.IEBCOPY.**))" | 
+    mvscmdauth --pgm=ADRDSSU --archive=${TESTHLQ}.mvscmd.adrdsu.dar,old --sysin=stdin --sysprint=stdout |
+    awk '!/1PAGE 0001|ADR109I|ADR006I|ADR801I|ADR006I|ADR013I|ADR012I/'
+ . unsetcc
+)
 
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.ADRDSU.DARV2'") >/dev/null 2>&1

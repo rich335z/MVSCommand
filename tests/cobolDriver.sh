@@ -22,22 +22,30 @@ tso alloc dsn\("'"${TESTHLQ}".MVSCMD.COBOL.SYSUT14'"\) dsorg\(ps\) catalog  trac
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.COBOL.SYSUT15'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.COBOL.SYSMDECK'"\) dsorg\(ps\) catalog  tracks space\(100,10\) >/dev/null 2>&1
 
-(export STEPLIB=${COBOLHLQ}.V5R2M0:${LEHLQ}.SCEERUN:${LEHLQ}.SCEERUN2:$STEPLIB; mvscmd -v --pgm="IGYCRCTL" --args="NONAME,NOTERM,NOLIST,NOSOURCE,NOXREF" --syslin=${TESTHLQ}.mvscmd.cobol.obj\(cobol\) --sysin=${TESTHLQ}.mvscmd.cobol\(main\) --sysprint=dummy --sysmdeck=${TESTHLQ}.mvscmd.cobol.sysmdeck \
---sysut1=${TESTHLQ}.mvscmd.cobol.sysut1 \
---sysut2=${TESTHLQ}.mvscmd.cobol.sysut2 \
---sysut3=${TESTHLQ}.mvscmd.cobol.sysut3 \
---sysut4=${TESTHLQ}.mvscmd.cobol.sysut4 \
---sysut5=${TESTHLQ}.mvscmd.cobol.sysut5 \
---sysut6=${TESTHLQ}.mvscmd.cobol.sysut6 \
---sysut7=${TESTHLQ}.mvscmd.cobol.sysut7 \
---sysut8=${TESTHLQ}.mvscmd.cobol.sysut8 \
---sysut9=${TESTHLQ}.mvscmd.cobol.sysut9 \
---sysut10=${TESTHLQ}.mvscmd.cobol.sysut10 \
---sysut11=${TESTHLQ}.mvscmd.cobol.sysut11 \
---sysut12=${TESTHLQ}.mvscmd.cobol.sysut12 \
---sysut13=${TESTHLQ}.mvscmd.cobol.sysut13 \
---sysut14=${TESTHLQ}.mvscmd.cobol.sysut14 \
---sysut15=${TESTHLQ}.mvscmd.cobol.sysut15\
+(
+ export STEPLIB=${COBOLHLQ}.V5R2M0:${LEHLQ}.SCEERUN:${LEHLQ}.SCEERUN2:$STEPLIB;
+ . setcc cobolCompile;
+ mvscmd -v --pgm="IGYCRCTL" --args="NONAME,NOTERM,NOLIST,NOSOURCE,NOXREF" \
+  --syslin=${TESTHLQ}.mvscmd.cobol.obj\(cobol\) \
+  --sysin=${TESTHLQ}.mvscmd.cobol\(main\) \
+  --sysprint=dummy \
+  --sysmdeck=${TESTHLQ}.mvscmd.cobol.sysmdeck \
+  --sysut1=${TESTHLQ}.mvscmd.cobol.sysut1 \
+  --sysut2=${TESTHLQ}.mvscmd.cobol.sysut2 \
+  --sysut3=${TESTHLQ}.mvscmd.cobol.sysut3 \
+  --sysut4=${TESTHLQ}.mvscmd.cobol.sysut4 \
+  --sysut5=${TESTHLQ}.mvscmd.cobol.sysut5 \
+  --sysut6=${TESTHLQ}.mvscmd.cobol.sysut6 \
+  --sysut7=${TESTHLQ}.mvscmd.cobol.sysut7 \
+  --sysut8=${TESTHLQ}.mvscmd.cobol.sysut8 \
+  --sysut9=${TESTHLQ}.mvscmd.cobol.sysut9 \
+  --sysut10=${TESTHLQ}.mvscmd.cobol.sysut10 \
+  --sysut11=${TESTHLQ}.mvscmd.cobol.sysut11 \
+  --sysut12=${TESTHLQ}.mvscmd.cobol.sysut12 \
+  --sysut13=${TESTHLQ}.mvscmd.cobol.sysut13 \
+  --sysut14=${TESTHLQ}.mvscmd.cobol.sysut14 \
+  --sysut15=${TESTHLQ}.mvscmd.cobol.sysut15 ;
+ . unsetcc;
 )
 
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.COBOL.SYSUT1'") >/dev/null 2>&1

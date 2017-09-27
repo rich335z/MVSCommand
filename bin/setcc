@@ -1,0 +1,11 @@
+#
+#wrapper mvscmd for code coverage data gathering
+#
+if [ -z "${1}" ]; then
+	testid="mvscmd";
+else
+    	testid="${1}"	
+fi
+export EQA_STARTUP_KEY=CC,,testid=${testid},savesource=true,cclevel=LINE
+export ORIG_STEPLIB=${STEPLIB}
+export STEPLIB=${DBGLIB}:$STEPLIB

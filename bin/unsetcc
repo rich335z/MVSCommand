@@ -1,0 +1,6 @@
+#
+#wrapper mvscmd for code coverage data gathering
+#
+unset testid
+unset EQA_STARTUP_KEY
+export STEPLIB=${ORIG_STEPLIB}

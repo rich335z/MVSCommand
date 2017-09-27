@@ -36,7 +36,7 @@ static ProgramFailureMsg_T establishEnvironment() {
 }
 
 int main(int argc, char* argv[]) {
-	OptInfo_T optInfo = { DEFAULT_MVSCMD, "", NULL, 0, 0 };
+	OptInfo_T optInfo = { DEFAULT_MVSCMD, "", NULL, 0, 0, 0 };
 	ProgramInfo_T progInfo = { 0, 0, 0, 0, 0 };
 
 	ProgramFailureMsg_T rc;

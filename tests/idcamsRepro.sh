@@ -6,13 +6,18 @@
 #
 #set -x
 
-#export STEPLIB=${AUTHHLQ}.${AUTHSFX}:$STEPLIB
-
 # First, delete the dataset if it already exists, and suppress any errors
+. setcc DeleteVSAMDataset
 mvscmdauth --pgm="IDCAMS" --args="MARGINS(2 72)" --sysin=${TESTHLQ}.mvscmd.idcams.cmd\(delete\) --sysprint=* >/dev/null
+. unsetcc
 
 # Repro the dataset 
+. setcc ReproVSAMDataset
 mvscmdauth -v --pgm="IDCAMS" --sysin=${TESTHLQ}.mvscmd.idcams.cmd\(define\) --sysprint=* --datain=${TESTHLQ}.mvscmd.idcams.in\(idcams\) | awk '!/1IDCAMS/' | /bin/sed -e 's/ \+VOLUMES([0-9A-Z]*)/ VOLUMES(******)/' | /bin/sed -e 's/ \+VOLUME [^ ]\+/ VOLUME ******/'
+. unsetcc
 
 # Delete the (created) dataset
+. setcc DeleteVSAMDatasetAgain
 mvscmdauth --pgm="IDCAMS" --args="MARGINS(2 72)" --sysin=${TESTHLQ}.mvscmd.idcams.cmd\(delete\) --sysprint=* | awk '!/1IDCAMS/' 
+. unsetcc
+
