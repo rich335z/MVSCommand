@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Mike Fulton - initial implentation and documentation
+ *    Mike Fulton - initial implementation and documentation
  *******************************************************************************/
 #include <ctype.h>
 #include <string.h>

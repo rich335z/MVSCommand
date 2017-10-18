@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Mike Fulton - initial implentation and documentation
+ *    Mike Fulton - initial implementation and documentation
  *******************************************************************************/
 #include <stdlib.h>
 #include <ctype.h>
@@ -15,11 +15,46 @@
 #include <dynit.h>
 #include <env.h>
 #include <string.h>
+#define _POSIX_SOURCE
+#include <sys/stat.h>
 
 #include "mvsmsgs.h"
 #include "mvsdataset.h"
 #include "mvsargs.h"
 #include "mvsutil.h"
+
+static int hasMemberName(FileNode_T* fileNode) {
+	return (fileNode->node.ds.memName[0] != '\0');
+}
+
+static void setNoMemberName(FileNode_T* fileNode) {
+	fileNode->node.ds.memName[0] = '\0';
+}
+
+static void setMemberName(FileNode_T* fileNode, const char* memName, int len) {
+	memcpy(fileNode->node.ds.memName, memName, len);
+	fileNode->node.ds.memName[len] = '\0';	
+	uppercase(fileNode->node.ds.memName);
+}
+
+static char* getMemberName(FileNode_T* fileNode) {
+	return fileNode->node.ds.memName;
+}
+
+static void setDSName(FileNode_T* fileNode, const char* dsName, int len) {
+	memcpy(fileNode->node.ds.dsName, dsName, len);
+	fileNode->node.ds.dsName[len] = '\0';		
+	uppercase(fileNode->node.ds.dsName);
+}
+
+static void setHFSName(FileNode_T* fileNode, const char* fileName, int len) {
+	memcpy(fileNode->node.hfs.fileName, fileName, len);
+	fileNode->node.hfs.fileName[len] = '\0';		
+}	
+
+static char* getHFSName(FileNode_T* fileNode) {
+	return fileNode->node.hfs.fileName;
+}
 
 typedef struct {
 	unsigned short len;
@@ -68,13 +103,22 @@ static void DatasetAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
 	 * https://www.ibm.com/support/knowledgecenter/SSLTBW_2.1.0/com.ibm.zos.v2r1.ieaa800/erc.htm
 	 */
 	if (optInfo->verbose) {
-		printError(ErrorCodesAllocatingDataset, ip->__errcode, ip->__infocode);
+		printError(ErrorCodesAllocatingDDName, ip->__errcode, ip->__infocode);
 	}
 	if (ip->__errcode == DATASET_PROBABLY_DOES_NOT_EXIST) {
 		printError(ErrorAllocatingNonExistantDataset, ddName, dsName);
 	} else {
 		printError(ErrorAllocatingDataset, ddName, dsName);	
 	}
+}
+
+static void HFSAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
+	char* ddName   = ip->__ddname;
+	char* fileName = ip->__pathname;
+	if (optInfo->verbose) {
+		printError(ErrorCodesAllocatingDDName, ip->__errcode, ip->__infocode);
+	}
+	printError(ErrorAllocatingHFS, ddName, fileName);	
 }
 
 static void PDSMemberAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
@@ -89,14 +133,12 @@ static void DummyAllocationError(OptInfo_T* optInfo, __dyn_t* ip) {
 }
 
 static ProgramFailureMsg_T allocDDNode(DDNameList_T** ddNameList) {
-	DDNameList_T* newDDNode = malloc(sizeof(DDNameList_T));
+	DDNameList_T* newDDNode = calloc(1, sizeof(DDNameList_T));
 	if (newDDNode == NULL) {
 		return InternalOutOfMemory;
 	}
 
 	newDDNode->next = *ddNameList;
-	newDDNode->fileNodeList.head = NULL;
-	newDDNode->fileNodeList.tail = NULL;
 	
 	*ddNameList = newDDNode;
 	
@@ -310,6 +352,10 @@ static void copyDSNameAndMember(FileNode_T* entry, const char* buffer, int start
 	}
 }
 
+static void copyHFSName(FileNode_T* entry, const char* buffer, int start, int end) {
+	setHFSName(entry, &buffer[start], end-start);
+}
+
 static ProgramFailureMsg_T addDatasetDDName(const char* option, int* optPos, OptInfo_T* optInfo, DDNameList_T* entry) {
 	ProgramFailureMsg_T rc = NoError;
 	int i = *optPos;
@@ -348,27 +394,36 @@ static ProgramFailureMsg_T addDatasetDDName(const char* option, int* optPos, Opt
 	return rc;
 }
 
-ProgramFailureMsg_T validHFSFile(const char* text, int start, int end) {
+ProgramFailureMsg_T validHFSPath(const char* text, int start, int end) {
+	char path[HFSDD_FILENAME_MAX+1];
+	struct stat info;
 	ProgramFailureMsg_T rc;
-	char file[FILENAME_MAX+1];
 	
-	if (end-start > FILENAME_MAX) {
-		rc = ErrorHFSFileTooLong;
-		printError(ErrorHFSFileTooLong, end-start, &text[start]);
+	if (end-start > HFSDD_FILENAME_MAX) {
+		rc = ErrorHFSPathTooLong;
+		printError(ErrorHFSPathTooLong, end-start, &text[start]);
 		return rc;
 	}
-	memcpy(file, &text[start], end-start);
-	file[end-start] = '\0';
-	FILE* fp = fopen(file, "rb");
-	if (fp == NULL) {
-		rc = ErrorUnableToReadHFSFile;
-		printError(ErrorUnableToReadHFSFile, file);
+	memcpy(path, &text[start], end-start);
+	path[end-start] = '\0';
+	if (stat(path, &info)) {
+		rc = ErrorUnableToReadHFSPath;
+		printError(ErrorUnableToReadHFSPath, path);
 		return rc;
 	}		
-	fclose(fp);
+
 	return NoError;
 }
  
+int isHFSRWFile(const char* path) {
+	struct stat info;
+	if (stat(path, &info)) {
+		return 0;
+	}
+	int isWritableByMe = (S_ISREG(info.st_mode) && (getuid() == info.st_uid) && (info.st_mode & S_IWUSR));
+	return isWritableByMe;
+}
+
 static ProgramFailureMsg_T addHFSDDName(const char* option, int* optPos, OptInfo_T* optInfo, DDNameList_T* entry) {
 	ProgramFailureMsg_T rc = NoError;
 	int i;
@@ -378,7 +433,7 @@ static ProgramFailureMsg_T addHFSDDName(const char* option, int* optPos, OptInfo
 		;
 	}
 
-	rc = validHFSFile(option, hfsStart, i);
+	rc = validHFSPath(option, hfsStart, i);
 	if (rc != NoError) {
 		return rc;	
 	}
@@ -388,6 +443,8 @@ static ProgramFailureMsg_T addHFSDDName(const char* option, int* optPos, OptInfo
 		return rc;
 	}
 	entry->isHFS = 1;
+	copyHFSName(entry->fileNodeList.tail, option, hfsStart, i);
+	entry->isHFSRWFile = isHFSRWFile(getHFSName(entry->fileNodeList.tail));
 	
 	*optPos = i;
 	return rc;
@@ -481,7 +538,7 @@ static int allocPDSMember(OptInfo_T* optInfo, char* ddName, FileNode_T* fileNode
 
 	ip.__ddname = ddName; 
 	ip.__dsname = fileNode->node.ds.dsName; 
-	ip.__member = fileNode->node.ds.memName;
+	ip.__member = getMemberName(fileNode);
 	ip.__dsorg  = __DSORG_PS;
 	if (isExclusive) {
 		ip.__status = __DISP_OLD;
@@ -491,11 +548,12 @@ static int allocPDSMember(OptInfo_T* optInfo, char* ddName, FileNode_T* fileNode
 
 	errno = 0;
 	rc = dynalloc(&ip); 
-	if (rc) {
+	if (rc || FORCE(FAIL_PDSMemberAllocation)) {
+		rc = (rc == 0) ? FORCED_ALLOCATION_RC : rc;
 		PDSMemberAllocationError(optInfo, &ip);
 	} else {
    		if (optInfo->verbose) {
-   			printInfo(InfoPDSMemberAllocationSucceeded, ddName, fileNode->node.ds.dsName, fileNode->node.ds.memName);
+   			printInfo(InfoPDSMemberAllocationSucceeded, ddName, fileNode->node.ds.dsName, getMemberName(fileNode));
    		}
    	}
 	return rc;
@@ -523,6 +581,36 @@ static int allocDataset(OptInfo_T* optInfo, char* ddName, FileNode_T* fileNode, 
 	} else {
    		if (optInfo->verbose) {
    			printInfo(InfoDatasetAllocationSucceeded, ddName, fileNode->node.ds.dsName);
+   		}
+   	}
+	return rc;
+}
+
+static int allocHFS(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
+	__dyn_t ip;
+	int rc;
+	char* ddName = ddNameList->ddName;
+	FileNode_T* fileNode = ddNameList->fileNodeList.head;
+	int isHFSRWFile = ddNameList->isHFSRWFile;
+
+	dyninit(&ip);
+
+	ip.__ddname = ddName; 
+	ip.__pathname = getHFSName(fileNode); 
+	if (isHFSRWFile) {
+		ip.__pathopts = __PATH_ORDWR;
+	} else {
+		ip.__pathopts = __PATH_ORDONLY;		
+	}
+
+	errno = 0;
+	rc = dynalloc(&ip); 
+	if (rc || FORCE(FAIL_HFSAllocation)) {
+		rc = (rc == 0) ? FORCED_ALLOCATION_RC : rc;
+		HFSAllocationError(optInfo, &ip);
+	} else {
+   		if (optInfo->verbose) {
+   			printInfo(InfoHFSAllocationSucceeded, ddName, getHFSName(fileNode), isHFSRWFile ? "rw" : "r");
    		}
    	}
 	return rc;
@@ -567,7 +655,8 @@ static int allocConsole(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
 
 	errno = 0;
 	rc = dynalloc(&ip); 
-	if (rc) {
+	if (rc || FORCE(FAIL_ConsoleAllocation)) {
+		rc = (rc == 0) ? FORCED_ALLOCATION_RC : rc;
 		ConsoleAllocationError(optInfo, &ip);
 	} else {
    		if (optInfo->verbose) {
@@ -601,7 +690,8 @@ static int allocStdin(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
 
 	errno = 0;
 	rc = dynalloc(&ip); 
-	if (rc) {
+	if (rc || FORCE(FAIL_StdinAllocation)) {
+		rc = (rc == 0) ? FORCED_ALLOCATION_RC : rc;
 		StdinAllocationError(optInfo, &ip);
 	} else {
    		if (optInfo->verbose) {
@@ -683,14 +773,19 @@ static int printDatasetToConsole(char* dataset) {
 	size_t numElements = 1;
 	size_t size = 137;
 	int readCount;
+	int rc;
+	
+	if (fp == NULL || FORCE(FAIL_PrintDatasetToConsole)) {
+		return FORCED_ALLOCATION_RC;
+	}
 
 	while ((readCount = fread(line, numElements, size, fp)) > 0) {
 		line[readCount] = '\0';
 		printf("%s\n", line);
 	}
-	fclose(fp);
+	rc = fclose(fp);
 
-	return 0;
+	return rc;
 }
 
 static int allocConcatenationReadOnly(OptInfo_T* optInfo, DDNameList_T* ddNameList) {
@@ -762,7 +857,8 @@ static int allocConcatenationReadOnly(OptInfo_T* optInfo, DDNameList_T* ddNameLi
 	parmlist.__S99TXTPP = svc99PParms;
 	
 	rc = svc99(&parmlist);
-	if (rc) {
+	if (rc || FORCE(FAIL_ConcatenationAllocation)) {
+		rc = (rc == 0) ? FORCED_ALLOCATION_RC : rc;
 		ConcatenationAllocationError(optInfo, ddNameList, &parmlist);
 	}
 	return rc;
@@ -779,7 +875,8 @@ static int allocDummy(OptInfo_T* optInfo, char* ddName) {
 
 	errno = 0;
 	rc = dynalloc(&ip); 
-	if (rc) {
+	if (rc || FORCE(FAIL_DummyAllocation)) {
+		rc = (rc == 0) ? FORCED_ALLOCATION_RC : rc;
 		DummyAllocationError(optInfo, &ip);
 	} else {
    		if (optInfo->verbose) {
@@ -864,11 +961,15 @@ static void printDDNames(DDNameList_T* ddNameList) {
 			FileNode_T* fileNode = ddNameList->fileNodeList.head;
 			printInfo(InfoDDName, ddNameList->ddName);
 			while (fileNode != NULL) {
-				if (hasMemberName(fileNode)) {
-					printInfo(InfoPDSMemberName, fileNode->node.ds.dsName, fileNode->node.ds.memName);
-				} else {
-					printInfo(InfoDatasetName, fileNode->node.ds.dsName);
-				}	
+				if (ddNameList->isHFS) {
+					printInfo(InfoDDNameHFSFile, ddNameList->ddName, getHFSName(fileNode));
+				} else { 				
+					if (hasMemberName(fileNode)) {
+						printInfo(InfoPDSMemberName, fileNode->node.ds.dsName, getMemberName(fileNode));
+					} else {
+						printInfo(InfoDatasetName, fileNode->node.ds.dsName);
+					}	
+				}
 				if (ddNameList->isExclusive) {
 					printInfo(InfoExclusive);
 				}
@@ -908,7 +1009,7 @@ ProgramFailureMsg_T establishDDNames(OptInfo_T* optInfo) {
 		} else if (!strcmp(ddNameList->ddName, STEPLIB_DDNAME)) {
 			rc = allocSteplib(optInfo, &ddNameList->fileNodeList);
 		} else if (ddNameList->isHFS) {
-			printf("DDName:%s is an HFS ddname\n", ddNameList->ddName);
+			rc = allocHFS(optInfo, ddNameList);
 		} else if (ddNameList->isConcatenation) {
 			rc = allocConcatenationReadOnly(optInfo, ddNameList);
 		} else {

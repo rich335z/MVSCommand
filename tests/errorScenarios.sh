@@ -2,6 +2,14 @@
 # Test error scenarios for mvscmd
 #
 #set -x
+. setcc errInvalidOptionTooShort
+mvscmd --ar=myardd     
+. setcc errInvalidOptionTooLong
+mvscmd --pgmName=mypgmdd  
+. setcc errNoProgramSpecified
+mvscmd --pgm
+. setcc errNoArgSpecified
+mvscmd --args
 . setcc errPgmNameTooLong
 mvscmd --pgm="Greater#8" #name greater than 8 characters
 . setcc errArgsTooLong

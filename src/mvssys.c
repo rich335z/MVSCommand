@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Mike Fulton - initial implentation and documentation
+ *    Mike Fulton - initial implementation and documentation
  *******************************************************************************/
 #include <dynit.h>
 #include <stdlib.h>
@@ -208,11 +208,6 @@ ProgramFailureMsg_T loadProgram(OptInfo_T* optInfo, ProgramInfo_T* progInfo) {
 	if (rc == 0) {
 		int isAPFAuth = isAPFAuthorized();
 		setprogInfo(optInfo, progInfo, fp, info);	
-#if 0		
-		if (optInfo->verbose) {
-			printInfo(InfoAPFAuthorization, isAPFAuth, progInfo->APFAuthorized);
-		}
-#endif
 		if (isAPFAuth) {
 			if (progInfo->APFAuthorized) {
 				; /* all good */

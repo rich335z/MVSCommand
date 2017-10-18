@@ -1,7 +1,3 @@
  LINE-#  SOURCE SECTION                    SRCH DSN: @@HLQ@@.MVSCMD.JCL
  SORT                        --------- STRING(S) FOUND -------------------
       6  //SYSIN    DD DSN=@@HLQ@@.MVSCMD.DFSORT.CMD,DISP=SHR
- LINE-#  SOURCE SECTION                    SRCH DSN: @@HLQ@@.MVSCMD.LOAD
- MVSCMD                      --------- STRING(S) FOUND -------------------
-     17  f member name <%s>
-

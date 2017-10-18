@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Mike Fulton - initial implentation and documentation
+ *    Mike Fulton - initial implementation and documentation
  *******************************************************************************/
 #include <stdio.h>
 #include <limits.h>
@@ -26,13 +26,18 @@
 #include "mvsargs.h"
 
 static ProgramFailureMsg_T establishEnvironment() {
-	if (setenv("__POSIX_TMPNAM", "NO", 1)) {
-		return UnableToEstablishEnvironment;
+	ProgramFailureMsg_T rc;
+	if (setenv("__POSIX_TMPNAM", "NO", 1) || FORCE(FAIL_SetEnvPOSIXTmpNam)) {
+		rc = UnableToEstablishEnvironment;
+	} else if (setenv("__POSIX_SYSTEM", "NO", 1) || FORCE(FAIL_SetEnvPOSIXSystem)) {
+		rc = UnableToEstablishEnvironment;
+	} else {
+		rc = NoError;
 	}
-	if (setenv("__POSIX_SYSTEM", "NO", 1)) {
-		return UnableToEstablishEnvironment;
-	}		
-	return NoError;
+	if (rc != NoError) {
+		printError(ErrorEstablishingEnvironment);	
+	}
+	return rc;
 }
 
 int main(int argc, char* argv[]) {

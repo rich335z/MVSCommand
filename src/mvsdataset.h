@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Mike Fulton - initial implentation and documentation
+ *    Mike Fulton - initial implementation and documentation
  *******************************************************************************/
 #ifndef __MVSDATASET__
 	#define __MVSDATASET__ 1
@@ -21,6 +21,7 @@
 	#define SEPARATOR_CHAR ':'
 	#define OPTION_CHAR ','
 	
+	#define HFSDD_FILENAME_MAX (255)
 	#define MAX_DATASET_LEN (44)
 	#define MAX_QUALIFIER_LEN   (8)
 	#define MAX_MEMBER_LEN      (8)
@@ -37,6 +38,8 @@
 	
 	#define DATASET_PROBABLY_DOES_NOT_EXIST 0x1708
 	
+	#define FORCED_ALLOCATION_RC 16
+	
 	typedef _Packed struct DSNode {
 		char dsName[MAX_DATASET_LEN+1]; 
 		char memName[MAX_MEMBER_LEN+1];
@@ -48,7 +51,7 @@
 	} DSConcatenationNode_T;
 	
 	typedef _Packed struct HFSNode {
-		char fileName[FILENAME_MAX+1]; 
+		char fileName[HFSDD_FILENAME_MAX+1]; 
 	} HFSNode_T;
 	
 	struct FileNode;
@@ -67,30 +70,13 @@
 		FileNode_T* tail;
 	} FileNodeList_T;
 	
-	static int hasMemberName(FileNode_T* fileNode) {
-		return (fileNode->node.ds.memName[0] != '\0');
-	}
-	static void setNoMemberName(FileNode_T* fileNode) {
-		fileNode->node.ds.memName[0] = '\0';
-	}
-	static void setMemberName(FileNode_T* fileNode, const char* memName, int len) {
-		memcpy(fileNode->node.ds.memName, memName, len);
-		fileNode->node.ds.memName[len] = '\0';	
-		uppercase(fileNode->node.ds.memName);
-	}
-	
-	static void setDSName(FileNode_T* fileNode, const char* dsName, int len) {
-		memcpy(fileNode->node.ds.dsName, dsName, len);
-		fileNode->node.ds.dsName[len] = '\0';		
-		uppercase(fileNode->node.ds.dsName);
-	}
-	
 	struct DDNameList;
 	typedef struct DDNameList {
 		struct DDNameList* next;
 		FileNodeList_T fileNodeList;
 		char ddName[MAX_DDNAME_LEN+1];
 		int isHFS:1;
+		int isHFSRWFile:1;
 		int isStdin:1;		
 		int isConsole:1;
 		int isDummy:1;	

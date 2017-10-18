@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Mike Fulton - initial implentation and documentation
+ *    Mike Fulton - initial implementation and documentation
  *******************************************************************************/
 
 #ifndef __MVSMSG__
@@ -50,13 +50,15 @@
 		ErrorWaitingForPID=31,
 		ErrorChildCompletion=32,
 		ErrorAllocatingNonExistantDataset=33,
-		ErrorCodesAllocatingDataset=34,
+		ErrorCodesAllocatingDDName=34,
 		ErrorCallingUnauthorizedFromAuthorized=35,
 		ErrorCallingAuthorizedFromUnauthorized=36,
-		ErrorUnableToReadHFSFile=37,
-		ErrorHFSFileTooLong=38,
+		ErrorUnableToReadHFSPath=37,
+		ErrorHFSPathTooLong=38,
 		ErrorAllocatingSTDIN=39,
 		ErrorStdinWriteFailed=40,
+		ErrorAllocatingHFS=41,
+		ErrorEstablishingEnvironment=42
 	} ProgramFailureMsg_T;
 	
 	/*
@@ -118,8 +120,16 @@
 		InfoStdinDatasetAllocationSucceeded=52,
 		InfoStdinDDName=53,	
 		InfoStdinRecordTooLong=54,
+		InfoDDNameHFSFile=55,
+		InfoHFSAllocationSucceeded=56,
 	} ProgramInfoMsg_T;
 	
+#ifdef DEBUG
+	#define FORCE(FAIL_Condition) \
+		(getenv(#FAIL_Condition))
+#else
+	#define FORCE(FAIL_Condition) (0)
+#endif
 	void printHelp(const char* pgmName);
 
 	void printError(ProgramFailureMsg_T pfm, ...);

@@ -1,3 +1,7 @@
+Error allocating DDName AR to (probably) non-existant dataset MYARDD.
+Error allocating DDName PGMNAME to (probably) non-existant dataset MYPGMDD.
+No Program name specified with program option.
+No program arguments specified with argument option.
 Name Greater#8 is more than 8 characters long.
 Program arguments more than 100 characters.
 Name ~xx contains invalid characters.

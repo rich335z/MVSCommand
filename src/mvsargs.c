@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Mike Fulton - initial implentation and documentation
+ *    Mike Fulton - initial implementation and documentation
  *******************************************************************************/
 #include <stdlib.h>
 #include <stdio.h>
@@ -135,6 +135,7 @@ ProgramFailureMsg_T processArgs(int argc, char* argv[], OptInfo_T* optInfo) {
 	ProgramFailureMsg_T rc;
 	int i;
 	
+#if MIN_ARGS > 0	
 	if (argc < MIN_ARGS+1) {
 		if (MIN_ARGS == 1) {
 			printError(TooFewArgsSingular);
@@ -143,10 +144,13 @@ ProgramFailureMsg_T processArgs(int argc, char* argv[], OptInfo_T* optInfo) {
 		}
 		return TooFewArgsPlural;
 	}
+#endif
+#if MAX_ARGS < INT_MAX
 	if (argc > MAX_ARGS) {
 		printError(TooManyArgs);
 		return TooManyArgs;
 	}	
+#endif
 	for (i=1; i<argc; ++i) {
 		rc = processArg(argv[i], options, optInfo);
 		if (rc != NoError) {

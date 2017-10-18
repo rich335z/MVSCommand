@@ -1,0 +1,18 @@
+Error establishing environment.
+16
+Error establishing environment.
+16
+8
+Error allocating DDName SYSTERM to CONSOLE (backing temporary dataset xxx).
+Error allocating DDName MYDD to PDS Member CEE.SCEERUN(SOMEMEM).
+8
+Error allocating DDName MYDD to file /u/ibmuser/MVSCommand.
+8
+Error reading from stdin to MYDD.
+8
+Error printing dataset IBMUSER.DT100517.TT022547.M0012802.C0000000 to console.
+8
+Error allocating DDName MYDD concatenation.
+8
+Error allocating DDName MYDD to DUMMY.
+8

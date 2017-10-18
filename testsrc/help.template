@@ -1,0 +1,76 @@
+Syntax: mvscmd [<args>]
+ where <args> is one or more of the following:
+ --help | -? (this help)
+ --info | -h (this help)
+ --pgm=<program-name> | -p=<program-name>  (the program to run, e.g. -p=iebcopy). Default is IEFBR14
+ --args=<program-arguments> | -a=<program-arguments> (arguments to pass to the program, e.g. -a='MARGINS(1,72)'. Default is ''
+ --verbose | -v (verbose messages). Default is off
+ --debug | -d (even more verbose messages). Default is off.
+ --<ddname>=<value>[,excl|,old] (specify a dataset, concatenated dataset, PDS member, console or dummy for the given ddname).
+  Dataset example: --sysin=IBMUSER.TEST.OBJ: allocate the DDName SYSIN to the dataset IBMUSER.TEST.OBJ
+  Concatenated dataset example: --syslib=CEE.SCEELKED:CEE.SCEELKEX: allocate the ddname SYSLIB to the dataset concatenation CEE.SCEELKED:CEE.SCEELKEX
+  Console example: --sysprint=*: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).
+  Console example (alternate): --sysprint=stdout: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).
+  stdin example: --sysin=stdin: allocate the DDName SYSIN to an FB 80 temporary sequential dataset that has stdin written to it (stdin can be piped in from other processes).
+  Dummy Dataset example: --sysin=dummy: allocate the DDName SYSIN to DUMMY
+  Dataset allocated as 'exclusive' (i.e. DISP=OLD) example: --archive=IBMUSER.MVSCMD.DAR,EXCL
+ Note: DD-names and the keywords DUMMY, EXCL and OLD are case-insensitive. All other options are case-sensitive
+ Example: Compare 2 PDS members 'old' and 'new' and write the output to stdout
+  echo "   CMPCOLM 1:72" | mvscmd --pgm=isrsupc --args="DELTAL,LINECMP" --newdd=ibmuser.in\(new\) --olddd=ibmuser.in\(old\) --sysin=stdin --outdd=stdout
+Syntax: mvscmd [<args>]
+ where <args> is one or more of the following:
+ --help | -? (this help)
+ --info | -h (this help)
+ --pgm=<program-name> | -p=<program-name>  (the program to run, e.g. -p=iebcopy). Default is IEFBR14
+ --args=<program-arguments> | -a=<program-arguments> (arguments to pass to the program, e.g. -a='MARGINS(1,72)'. Default is ''
+ --verbose | -v (verbose messages). Default is off
+ --debug | -d (even more verbose messages). Default is off.
+ --<ddname>=<value>[,excl|,old] (specify a dataset, concatenated dataset, PDS member, console or dummy for the given ddname).
+  Dataset example: --sysin=IBMUSER.TEST.OBJ: allocate the DDName SYSIN to the dataset IBMUSER.TEST.OBJ
+  Concatenated dataset example: --syslib=CEE.SCEELKED:CEE.SCEELKEX: allocate the ddname SYSLIB to the dataset concatenation CEE.SCEELKED:CEE.SCEELKEX
+  Console example: --sysprint=*: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).
+  Console example (alternate): --sysprint=stdout: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).
+  stdin example: --sysin=stdin: allocate the DDName SYSIN to an FB 80 temporary sequential dataset that has stdin written to it (stdin can be piped in from other processes).
+  Dummy Dataset example: --sysin=dummy: allocate the DDName SYSIN to DUMMY
+  Dataset allocated as 'exclusive' (i.e. DISP=OLD) example: --archive=IBMUSER.MVSCMD.DAR,EXCL
+ Note: DD-names and the keywords DUMMY, EXCL and OLD are case-insensitive. All other options are case-sensitive
+ Example: Compare 2 PDS members 'old' and 'new' and write the output to stdout
+  echo "   CMPCOLM 1:72" | mvscmd --pgm=isrsupc --args="DELTAL,LINECMP" --newdd=ibmuser.in\(new\) --olddd=ibmuser.in\(old\) --sysin=stdin --outdd=stdout
+Syntax: mvscmd [<args>]
+ where <args> is one or more of the following:
+ --help | -? (this help)
+ --info | -h (this help)
+ --pgm=<program-name> | -p=<program-name>  (the program to run, e.g. -p=iebcopy). Default is IEFBR14
+ --args=<program-arguments> | -a=<program-arguments> (arguments to pass to the program, e.g. -a='MARGINS(1,72)'. Default is ''
+ --verbose | -v (verbose messages). Default is off
+ --debug | -d (even more verbose messages). Default is off.
+ --<ddname>=<value>[,excl|,old] (specify a dataset, concatenated dataset, PDS member, console or dummy for the given ddname).
+  Dataset example: --sysin=IBMUSER.TEST.OBJ: allocate the DDName SYSIN to the dataset IBMUSER.TEST.OBJ
+  Concatenated dataset example: --syslib=CEE.SCEELKED:CEE.SCEELKEX: allocate the ddname SYSLIB to the dataset concatenation CEE.SCEELKED:CEE.SCEELKEX
+  Console example: --sysprint=*: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).
+  Console example (alternate): --sysprint=stdout: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).
+  stdin example: --sysin=stdin: allocate the DDName SYSIN to an FB 80 temporary sequential dataset that has stdin written to it (stdin can be piped in from other processes).
+  Dummy Dataset example: --sysin=dummy: allocate the DDName SYSIN to DUMMY
+  Dataset allocated as 'exclusive' (i.e. DISP=OLD) example: --archive=IBMUSER.MVSCMD.DAR,EXCL
+ Note: DD-names and the keywords DUMMY, EXCL and OLD are case-insensitive. All other options are case-sensitive
+ Example: Compare 2 PDS members 'old' and 'new' and write the output to stdout
+  echo "   CMPCOLM 1:72" | mvscmd --pgm=isrsupc --args="DELTAL,LINECMP" --newdd=ibmuser.in\(new\) --olddd=ibmuser.in\(old\) --sysin=stdin --outdd=stdout
+Syntax: mvscmd [<args>]
+ where <args> is one or more of the following:
+ --help | -? (this help)
+ --info | -h (this help)
+ --pgm=<program-name> | -p=<program-name>  (the program to run, e.g. -p=iebcopy). Default is IEFBR14
+ --args=<program-arguments> | -a=<program-arguments> (arguments to pass to the program, e.g. -a='MARGINS(1,72)'. Default is ''
+ --verbose | -v (verbose messages). Default is off
+ --debug | -d (even more verbose messages). Default is off.
+ --<ddname>=<value>[,excl|,old] (specify a dataset, concatenated dataset, PDS member, console or dummy for the given ddname).
+  Dataset example: --sysin=IBMUSER.TEST.OBJ: allocate the DDName SYSIN to the dataset IBMUSER.TEST.OBJ
+  Concatenated dataset example: --syslib=CEE.SCEELKED:CEE.SCEELKEX: allocate the ddname SYSLIB to the dataset concatenation CEE.SCEELKED:CEE.SCEELKEX
+  Console example: --sysprint=*: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).
+  Console example (alternate): --sysprint=stdout: allocate the DDName SYSPRINT to stdout (which can then be piped to other processes).
+  stdin example: --sysin=stdin: allocate the DDName SYSIN to an FB 80 temporary sequential dataset that has stdin written to it (stdin can be piped in from other processes).
+  Dummy Dataset example: --sysin=dummy: allocate the DDName SYSIN to DUMMY
+  Dataset allocated as 'exclusive' (i.e. DISP=OLD) example: --archive=IBMUSER.MVSCMD.DAR,EXCL
+ Note: DD-names and the keywords DUMMY, EXCL and OLD are case-insensitive. All other options are case-sensitive
+ Example: Compare 2 PDS members 'old' and 'new' and write the output to stdout
+  echo "   CMPCOLM 1:72" | mvscmd --pgm=isrsupc --args="DELTAL,LINECMP" --newdd=ibmuser.in\(new\) --olddd=ibmuser.in\(old\) --sysin=stdin --outdd=stdout

@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Mike Fulton - initial implentation and documentation
+ *    Mike Fulton - initial implementation and documentation
  *******************************************************************************/
 #include <stdlib.h>
 #include <stdio.h>
@@ -51,13 +51,15 @@ static const char* ProgramFailureMessage[] = {
 	"Error waiting for PID %d to complete.\n",
 	"Child process did not complete correctly for %s.\n",
 	"Error allocating DDName %s to (probably) non-existant dataset %s.\n", 
-	"Error Codes allocating dataset: error:0x%X info:0x%X.\n",
+	"Error Codes allocating DDname: error:0x%X info:0x%X.\n",
 	"Unable to call unauthorized program %s from %s. Use %s.\n",
 	"Unable to call authorized program %s from %s. Use %s.\n",
-	"HFS file %s can not be read.\n",
-	"HFS file %.*s too long.\n",
+	"HFS path %s can not be read.\n",
+	"HFS path %.*s too long (255 is the maximum for DDName HFS Allocation).\n",
 	"Error reading from stdin to %s.\n",	
-	"Error writing record %d to stdin temporary dataset %s.\n"
+	"Error writing record %d to stdin temporary dataset %s.\n",
+	"Error allocating DDName %s to file %s.\n",
+	"Error establishing environment.\n"
 };
 
 static const char* ProgramInfoMessage[] = {
@@ -116,6 +118,8 @@ static const char* ProgramInfoMessage[] = {
 	"Dynamic allocation succeeded for %s (temporary dataset for stdin)\n",
 	"  %s=stdin\n",
 	"Record %d read from stdin is more than 80 bytes. Record truncated\n",
+	"%s",
+	"HFS allocation succeeded for %s=%s (%s)\n",
 };
 
 

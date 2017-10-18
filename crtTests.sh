@@ -20,6 +20,8 @@
 (tsocmd delete "'"${TESTHLQ}".MVSCMD.TSO.CMD'") >/dev/null 2>&1
 
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.BIND.OBJ'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.DLS.FILEA'"\) recfm\(v,b\) lrecl\(80\) dsorg\(ps\) dsntype\(basic\) catalog tracks space\(10,10\) >/dev/null 2>&1
+tso alloc dsn\("'"${TESTHLQ}".MVSCMD.DLS.FILEB'"\) recfm\(f,b\) lrecl\(80\) dsorg\(ps\) dsntype\(basic\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IDCAMS.CMD'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.IEBCOPY.CMD'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1
 tso alloc dsn\("'"${TESTHLQ}".MVSCMD.SUPERCE.CMD'"\) recfm\(f,b\) lrecl\(80\) dsorg\(po\) dsntype\(library\) catalog tracks space\(10,10\) >/dev/null 2>&1

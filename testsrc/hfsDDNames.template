@@ -1,0 +1,37 @@
+Program: <CCNDRVR> Arguments: </CXX>
+DDNames:
+  SYSPRINT=*
+  SYSIN=SYSIN
+  SYSLIN=SYSLIN
+Dynamic allocation succeeded for SYSPRINT (temporary dataset for console)
+HFS allocation succeeded for SYSIN=/tmp/mvscmd_chfs_main.c (r)
+HFS allocation succeeded for SYSLIN=/tmp/mvscmd_chfs_main.o (rw)
+OS Load program CCNDRVR 
+Addressing mode: AMODE31
+Attach Exit code: 0 from CCNDRVR
+Program: <sort> Arguments: <MSGPRT=CRITICAL,LIST>
+DDNames:
+  SYSOUT=*
+  SORTOUT=SORTOUT
+  SYSIN=@@HLQ@@.MVSCMD.DFSORT.CMD
+  SORTIN02=@@HLQ@@.MVSCMD.DFSORT.NEW
+  SORTIN01=@@HLQ@@.MVSCMD.DFSORT.MASTER
+Dynamic allocation succeeded for SYSOUT (temporary dataset for console)
+HFS allocation succeeded for SORTOUT=/tmp/mvscmd_dfsort_ok.merge (rw)
+Dataset allocation succeeded for SYSIN=@@HLQ@@.MVSCMD.DFSORT.CMD
+Dataset allocation succeeded for SORTIN02=@@HLQ@@.MVSCMD.DFSORT.NEW
+Dataset allocation succeeded for SORTIN01=@@HLQ@@.MVSCMD.DFSORT.MASTER
+OS Load program SORT    
+Addressing mode: AMODE31
+Attach Exit code: 0 from SORT
+1           MERGE FORMAT=CH,FIELDS=(1,9,A)                                                                               
+Child process did not complete correctly for SORT.
+ ICE185A 0 AN S614  ABEND WAS ISSUED BY DFSORT, ANOTHER PROGRAM OR AN EXIT (PHASE M 4)                                   
+HFS path /tmp/mvscmd000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 too long (255 is the maximum for DDName HFS Allocation).
+Program: <IEFBR14> Arguments: <>
+DDNames:
+  SYSLONG=SYSLONG
+HFS allocation succeeded for SYSLONG=/tmp/mvscmd0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 (rw)
+OS Load program IEFBR14 
+Addressing mode: AMODE24
+IEFBR14 run. Return code:0

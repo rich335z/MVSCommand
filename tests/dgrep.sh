@@ -2,7 +2,7 @@
 # simple program that searches all the PDS members for a string, e.g. dgrep IEFPROC sys1.proclib
 #
 if [ -z "$1" ]; then
-	str="SYSIN";
+	str="//SYSIN";
 	datasetpattern=${TESTHLQ}.MVSCMD.*
 else
 	str=$1;
